@@ -1,5 +1,5 @@
 import mesa
-from .agents.StandardAgent import StandardAgent
+from model.agents.StandardAgent import StandardAgent
 
 
 class SuicideModel(mesa.Model):

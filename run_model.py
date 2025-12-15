@@ -5,14 +5,16 @@ import numpy as np
 
 
 if __name__=="__main__":
-    # plot_stress()
     model = SuicideModel(5)
+    # Timestep size
     dt = 0.02
+    # Days to model
     T = 14
     N = int(T/dt)
     t = np.linspace(0, T, N+1)
     for i in range(1, N+1):
         model.step(dt)
+    
     agent_df = model.datacollector.get_agent_vars_dataframe()
     agent_to_observe = 1
     agent_df = agent_df.xs(agent_to_observe, level="AgentID")
