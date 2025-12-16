@@ -4,6 +4,9 @@ from model.system_updates.AgentUpdater import (
     AgentUpdater
 )
 from model.parameters.DefaultParameters import DefaultParameters
+from model.system_updates.StateParameters import StateParameters
+from model.system_updates.StateManager import StateManager
+from model.system_updates.states.SleepState import SleepState
 SOCIAL_WEIGHT_IDX = 1
 
 
@@ -17,8 +20,16 @@ class StandardAgent(mesa.Agent):
         Initializes the agent with a default stress value.
         """
         super().__init__(model)
+        self.type = "standard"
         self.updater = AgentUpdater()
         self.parameters = DefaultParameters()
+
+        # Initialize state-specific values
+        self.state_params = StateParameters()
+        self.state_params.set_commute()         # should be constant
+        self.state_params.set_sleep_params()
+
+        self.state_manager = StateManager(self.state_params)
         
         # Initial values
         self.stress = 0.5
@@ -29,12 +40,16 @@ class StandardAgent(mesa.Agent):
         self.external_strat = 0
         self.internal_strat = 0
         self.total_time = 0
+        self.state_manager.state = SleepState()
+        self.state_manager.state.generate_time(0, None, self.state_params)
 
-    def set_friends(self, n=2):
+    def set_friends(self, n=5):
+        n = min(n, self.model.num_agents)
         self.friends = self.set_social_connections(n)
         self.num_friends = n
 
-    def set_bullies(self, n=1):
+    def set_bullies(self, n=0):
+        n = min(n, self.model.num_agents)
         self.bullies = self.set_social_connections(n)
         self.num_bullies = n
     
@@ -42,6 +57,8 @@ class StandardAgent(mesa.Agent):
             self,
             n
     ):
+        if n == 0:
+            return np.array([])
         other_agents = [agent.unique_id 
                         for agent in self.model.agents 
                         if agent.unique_id != self.unique_id]
@@ -68,12 +85,15 @@ class StandardAgent(mesa.Agent):
         for agent_info in connections:
             total += agent_info[SOCIAL_WEIGHT_IDX]
         n = len(connections)
+        if n == 0:
+            return 0
         return (total/n) * (n/(k+n))
     
     def update_agent(self, dt):
         """
         Updates the agent over timestep dt.
         """
+
         # Update stress
         new_S = self.updater.stress(
             dt=dt,
@@ -164,3 +184,4 @@ class StandardAgent(mesa.Agent):
         self.external_strat = new_E
         self.internal_strat = new_I
         self.total_time += dt
+        self.state_manager.update_state(dt, self.total_time, self.parameters)

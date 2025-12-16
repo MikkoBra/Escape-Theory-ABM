@@ -2,6 +2,9 @@ import numpy as np
 
 
 class AgentUpdater():
+    """
+    Contains parameter update logic for the agents.
+    """
     def __init__(self):
         pass
     

@@ -5,10 +5,12 @@ from model.parameters.sets.SuicidalParameterSet import SuicidalParameterSet
 from model.parameters.sets.EscapeBehaviorParameterSet import EscapeBehaviorParameterSet
 from model.parameters.sets.ExternalParameterSet import ExternalParameterSet
 from model.parameters.sets.InternalParameterSet import InternalParameterSet
+from abc import ABC
 
-class Parameters():
+class Parameters(ABC):
     """
-    Class to contain and modify parameters to use for update equations.
+    Abstract class to extend for containing and modifying parameters
+    to use in update equations.
     """
     def __init__(self):
         self.stress = StressParameterSet()
@@ -133,7 +135,7 @@ class Parameters():
             if value is not None:
                 setattr(self.urge_to_escape, name, value)
     
-    def set_suicidal_thought_parameters(
+    def set_suicidal_thought_params(
             self,
             weight_new=None,
             sig_middle=None,
@@ -165,7 +167,7 @@ class Parameters():
             if value is not None:
                 setattr(self.suicidal_thought, name, value)
     
-    def set_escape_behavior_parameters(
+    def set_escape_behavior_params(
             self,
             weight_new=None,
             sig_middle=None,
