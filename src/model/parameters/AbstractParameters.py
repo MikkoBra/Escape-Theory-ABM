@@ -372,8 +372,8 @@ class Parameters(ABC):
         return {
             "A": aversive_internal_state,
             "U": urge_to_escape,
-            "feedback": self.external_strategy.feedback,
-            "carrying_capacity": self.external_strategy.carrying_capacity,
-            "A_weight": self.external_strategy.A_weight,
-            "U_weight": self.external_strategy.U_weight,
+            "feedback": self.internal_strategy.feedback,
+            "carrying_capacity": self.internal_strategy.carrying_capacity,
+            "A_weight": self.internal_strategy.A_weight,
+            "U_weight": self.internal_strategy.U_weight,
         }

@@ -21,6 +21,7 @@ class AgentUpdater():
         """
         Models stress evolution using discrete-time (Euler-Maruyama)
         approximation of an Ornstein-Uhlenbeck process.
+        S(t + dt) = S(t) + r(mu - S(t))*dt + dW*sigma
         """
         drift = reversion * (mean - prev_stress)
         dW = np.random.normal(0, np.sqrt(dt))
@@ -28,14 +29,15 @@ class AgentUpdater():
         damping = np.exp(-prev_E_weight * prev_E * dt)
         stress *= damping
         if stress < 0:
-            stress = -stress
+            stress = 0
         elif stress > 1:
-            stress = 2 - stress
+            stress = 1
         return stress
 
     def aversive_internal_state(self, prev_state, t, params):
         """
         Evolution equation of aversive internal state.
+        dA/dt = A*f * (K - A) + (S )
 
         params: dict
             Dictionary containing the required parameters

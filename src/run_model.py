@@ -107,7 +107,7 @@ if __name__=="__main__":
         csv_path = data_folder / f"{T}_days_{N_agents}_agents.csv"
         agent_df.to_csv(csv_path, index=True)
     else:
-        agent_df = pd.read_csv("output/14_days_100_agents.csv")
+        agent_df = pd.read_csv("output/10_days_100_agents.csv")
     plot = input("Generate plot? (y/n)\n> ")
     if plot == "y":
         if not isinstance(agent_df.index, pd.MultiIndex):
@@ -123,5 +123,7 @@ if __name__=="__main__":
         for _, row in first_of_each_type.iterrows():
             agent_id = row["AgentID"]
             label = row["Type"]
+            if label=="bullied":
+                agent_id = 93
             single_agent_df = agent_df.xs(agent_id, level="AgentID")
             plot_combined(single_agent_df, agent_id, label=label)
