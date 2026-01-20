@@ -1,7 +1,7 @@
 
-# Social-Suicide-ABM
+# Escape-Theory-ABM
 
-An Agent-Based Model (ABM) of a small community, simulating the onset of suicidal thoughts with social effects.
+An Agent-Based Model (ABM) of a small community, simulating the onset of suicidal thoughts with state-based interactions.
 
 
 ## Modules
@@ -12,8 +12,6 @@ src/
 ├── model/
 │   ├── agents/                    # Contains agent classes with unique parameter settings
 |   |   ├── StandardAgent.py       # Default agent class with main agent action definitions
-|   |   ├── BulliedAgent.py        # Agent class with a higher number of bullies
-|   |   ├── PopularAgent.py        # Agent class with a higher number of friends
 |   |   └── VolatileAgent.py       # Agent class with higher volatility
 |   |
 │   ├── parameters/
