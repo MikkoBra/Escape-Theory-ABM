@@ -36,13 +36,13 @@ README.md
 Clone the project
 
 ```bash
-  git clone https://github.com/MikkoBra/Social-Suicide-ABM
+  git clone https://github.com/MikkoBra/Escape-Theory-ABM
 ```
 
 Go to the project directory
 
 ```bash
-  cd Social-Suicide-ABM/src
+  cd Escape-Theory-ABM/src
 ```
 
 Install dependencies
