@@ -22,7 +22,7 @@ class HomeState(State):
         self._start_time = time
         mean_sleep = state_params.mean_sleep
         sigma_sleep = state_params.sigma_sleep
-        sleep_hours = max(0, np.random.normal(mean_sleep, sigma_sleep))
+        sleep_hours = max(1, np.random.normal(mean_sleep, sigma_sleep))
         sleep_length = sleep_hours * Constants.DAY_LENGTH * (1/24)
         
         time_of_day = time % Constants.DAY_LENGTH
@@ -33,15 +33,16 @@ class HomeState(State):
     
     def modify_parameters(self, params):
         # Reset from last state
-        params.set_defaults()
+        params.set_default_stress_params()
+        params.set_default_escape_behavior_params()
 
         # Escape behavior is easier
-        new_middle = max(params.escape_behavior.sig_middle - 0.05, 0)
-        params.set_suicidal_thought_params(sig_middle=new_middle)
+        new_middle = max(params.escape_behavior.sig_middle - 0.02, 0)
+        params.set_escape_behavior_params(sig_middle=new_middle)
 
-        # New suicidal thoughts are weighted heavier
-        updated_weight = min(params.suicidal_thought.weight_new + 0.1, 1)
-        params.set_suicidal_thought_params(weight_new=updated_weight)
+        # # New suicidal thoughts are weighted heavier
+        updated_weight = min(params.suicidal_thought.feedback + 0.1, 1)
+        params.set_suicidal_thought_params(feedback=updated_weight)
     
     def to_string(self):
         return self.STATE_NAME

@@ -1,5 +1,7 @@
 import mesa
 import numpy as np
+import pandas as pd
+from pathlib import Path
 from model.system_updates.AgentUpdater import (
     AgentUpdater
 )
@@ -14,8 +16,10 @@ class StandardAgent(mesa.Agent):
     """
     Default agent in the suicide model.
     """
+    time_values = None
+    stress_values = None
 
-    def __init__(self, model):
+    def __init__(self, model, stress_gen=False):
         """
         Initializes the agent with a default stress value.
         """
@@ -23,6 +27,8 @@ class StandardAgent(mesa.Agent):
         self.type = "standard"
         self.updater = AgentUpdater()
         self.parameters = DefaultParameters()
+        if stress_gen:
+            self.parameters.set_stress_params(impulse_rate=0)
 
         # Initialize state-specific values
         self.state_params = StateParameters()
@@ -32,78 +38,60 @@ class StandardAgent(mesa.Agent):
         self.state_manager = StateManager(self.state_params)
         
         # Initial values
-        self.stress = 0.5
-        self.aversive_internal_state = 0.39
+        self.close_connections = 15
+        self.medium_connections = 35
+        self.clustering_coefficient = 0
+        self.stress = 0
+        self.aversive_internal_state = 0.2
         self.urge_to_escape = 0
+        self.suicide_history = 0
         self.suicidal_thought = 0
         self.escape_behavior = 0
         self.external_strat = 0
         self.internal_strat = 0
+        self.burdensomeness = 0
         self.total_time = 0
+        self.temperature = 0.5
         self.state_manager.state = SleepState()
         self.state_manager.state.generate_time(0, None, self.state_params)
-
-    def set_friends(self, n=5):
-        n = min(n, self.model.num_agents)
-        self.friends = self.set_social_connections(n)
-        self.num_friends = n
-
-    def set_bullies(self, n=0):
-        n = min(n, self.model.num_agents)
-        self.bullies = self.set_social_connections(n)
-        self.num_bullies = n
     
-    def set_social_connections(
-            self,
-            n
-    ):
-        if n == 0:
-            return np.array([])
-        other_agents = [agent.unique_id 
-                        for agent in self.model.agents 
-                        if agent.unique_id != self.unique_id]
-        n = min(n, len(other_agents))
-        agent_IDs = np.random.choice(other_agents, size=n)
 
-        # Take n random samples from N(0.5, 0.15)
-        # (roughly between 0 and 1), then clip
-        weights = np.random.normal(loc=0.5, scale=0.15, size=n)
-        weights = np.clip(weights, 0, 1)
+    def init_stress():
+        data_folder = Path("output")
+        filename = "standard_stress.csv"
+        stress_df = pd.read_csv(data_folder / filename, usecols=["Stress", "Time"])
 
-        # Make 2D array
-        connections = np.column_stack((agent_IDs, weights))
-        return connections
+        StandardAgent.stress_values = stress_df["Stress"].to_numpy()
 
-    def saturated_mean_social_influence(self, connections, k=5):
-        """
-        Calculates social influence using the mean weight
-        of the agent's social connections. Saturates by
-        multiplying with f(n) = n/(k+n), so that f(n) =
-        1 as n -> inf, and f(n) = 1/2 at k = n.
-        """
-        total = 0
-        for agent_info in connections:
-            total += agent_info[SOCIAL_WEIGHT_IDX]
-        n = len(connections)
-        if n == 0:
-            return 0
-        return (total/n) * (n/(k+n))
+
+    def extract_neighbors(self):
+        neighbors = list(self.model.network.neighbors(self.network_id))
+        weights = [self.model.network.edges[self.network_id, neighbor]["strength"] \
+                   for neighbor in neighbors]
+        agent_neighbors = [self.model.agents[i] for i in neighbors]
+        self.parameters.set_burdensomeness_params(neighbors=agent_neighbors, neighbor_ws=weights)
+        self.compute_connectedness(weights=weights)
+    
+
+    def compute_connectedness(self, weights):
+        if len(weights) < 0:
+            self.connectedness = 0
+            return
+        
+        weights = np.array(weights)
+        softmax_dist = np.exp(weights / self.temperature)
+        softmax_dist /= weights.sum()
+
+        entropy = -np.sum(weights * np.log(weights + 1e-8))
+        max_entropy = np.log(len(weights))
+        normalized_entropy = entropy / max_entropy
+        self.connectedness = 1 - normalized_entropy
+
     
     def update_agent(self, dt):
         """
         Updates the agent over timestep dt.
         """
-
-        # Update stress
-        new_S = self.updater.stress(
-            dt=dt,
-            prev_stress=self.stress,
-            prev_E=self.external_strat,
-            mean=self.parameters.stress.mean,
-            sigma=self.parameters.stress.sigma,
-            reversion=self.parameters.stress.reversion,
-            prev_E_weight=self.parameters.stress.E_weight,
-            )
 
         # Update aversive internal state
         params = self.parameters.get_A_params(
@@ -111,29 +99,35 @@ class StandardAgent(mesa.Agent):
             suicidal_thought=self.suicidal_thought,
             escape_behavior=self.escape_behavior,
             internal_strat=self.internal_strat,
-            friend_influence=self.saturated_mean_social_influence(
-                self.friends),
-            bully_influence=self.saturated_mean_social_influence(
-                self.bullies),
+            burdensomeness=self.burdensomeness,
+            clustering_coefficient = self.clustering_coefficient
         )
-        new_A = self.updater.rk4_step(
-            self.aversive_internal_state,
-            self.total_time,
-            dt,
-            self.updater.aversive_internal_state,
-            params,
+        new_A = self.updater.aversive_internal_state(
+            prev_state=self.aversive_internal_state,
+            dt=dt,
+            params=params
         )
 
         # Update urge to escape
         params = self.parameters.get_U_params(
             aversive_internal_state=self.aversive_internal_state,
+            suicide_history=self.suicide_history,
+            connectedness=self.connectedness,
         )
-        new_U = self.updater.rk4_step(
-            self.urge_to_escape,
-            self.total_time,
-            dt,
-            self.updater.urge_to_escape,
-            params,
+        new_U = self.updater.urge_to_escape(
+            prev_state=self.urge_to_escape,
+            dt=dt,
+            params=params
+        )
+
+        # Update suicide history
+        params = self.parameters.get_M_params(
+            suicidal_thought=self.suicidal_thought
+        )
+        new_M = self.updater.suicide_history(
+            prev_state=self.suicide_history,
+            dt=dt,
+            params=params
         )
 
         # Update suicidal thought
@@ -141,26 +135,24 @@ class StandardAgent(mesa.Agent):
             urge_to_escape=self.urge_to_escape,
         )
         new_T = self.updater.sigmoid(
-            self.suicidal_thought, self.total_time, params
+            prev_state=self.suicidal_thought, dt=dt, params=params
         )
 
         # Update escape behavior
         params = self.parameters.get_X_params(
             self.urge_to_escape,
         )
-        new_X = self.updater.sigmoid(self.escape_behavior, self.total_time, params)
+        new_X = self.updater.sigmoid(self.escape_behavior, dt, params)
 
         # Update external strategy
         params = self.parameters.get_E_params(
             self.aversive_internal_state,
             self.urge_to_escape
         )
-        new_E = self.updater.rk4_step(
-            self.external_strat,
-            self.total_time,
-            dt,
-            self.updater.strategy_for_escape,
-            params,
+        new_E = self.updater.strategy_for_escape(
+            prev_state=self.external_strat,
+            dt=dt,
+            params=params
         )
 
         # Update internal strategy
@@ -168,20 +160,35 @@ class StandardAgent(mesa.Agent):
             self.aversive_internal_state,
             self.urge_to_escape
         )
-        new_I = self.updater.rk4_step(
-            self.internal_strat,
-            self.total_time,
-            dt,
-            self.updater.strategy_for_escape,
-            params,
+        new_I = self.updater.strategy_for_escape(
+            prev_state=self.internal_strat,
+            dt=dt,
+            params=params
         )
-
-        self.stress = new_S
+        
+        params = self.parameters.get_B_params(
+            self.internal_strat
+        )
+        new_B = self.updater.burdensomeness(
+            prev_state=self.burdensomeness,
+            dt=dt,
+            params=params
+        )
+        
         self.aversive_internal_state = new_A
         self.urge_to_escape = new_U
+        self.suicide_history = new_M
         self.suicidal_thought = new_T
         self.escape_behavior = new_X
         self.external_strat = new_E
         self.internal_strat = new_I
+        self.burdensomeness = new_B
         self.total_time += dt
+
+        values = StandardAgent.stress_values
+        idx = int(self.total_time/dt)
+        self.stress = values[idx]
+
+        if self.state_manager.state.STATE_NAME == "morning":
+            self.parameters.set_stress_params(morning_impulse=0)
         self.state_manager.update_state(dt, self.total_time, self.parameters)

@@ -29,14 +29,17 @@ class CommuteState(State):
     
     def modify_parameters(self, params):
         # Reset from last state
-        params.set_defaults()
+        params.set_default_suicidal_thought_params()
+        params.set_default_stress_params()
+        params.set_default_external_strategy_params()
+        params.set_default_internal_strategy_params()
 
         # Increase mean stress
-        new_s_mean = max(params.stress.mean + 0.2, 1)
-        params.set_stress_params(mean=new_s_mean)
+        new_s_mean = max(params.stress.baseline + 0.2, 1)
+        params.set_stress_params(baseline=new_s_mean)
         
         # Escape behavior is impossible
-        # params.set_escape_behavior_params(sig_middle=1.1)
+        params.set_escape_behavior_params(sig_middle=1.1)
     
     def to_string(self):
         return self.STATE_NAME

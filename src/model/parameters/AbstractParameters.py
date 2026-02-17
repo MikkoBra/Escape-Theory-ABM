@@ -5,6 +5,8 @@ from model.parameters.sets.SuicidalParameterSet import SuicidalParameterSet
 from model.parameters.sets.EscapeBehaviorParameterSet import EscapeBehaviorParameterSet
 from model.parameters.sets.ExternalParameterSet import ExternalParameterSet
 from model.parameters.sets.InternalParameterSet import InternalParameterSet
+from model.parameters.sets.SuicideHistoryParameterSet import SuicideHistoryParameterSet
+from model.parameters.sets.BurdenParameterSet import BurdenParameterSet
 from abc import ABC
 
 class Parameters(ABC):
@@ -16,38 +18,51 @@ class Parameters(ABC):
         self.stress = StressParameterSet()
         self.aversion = AversionParameterSet()
         self.urge_to_escape = UrgeToEscapeParameterSet()
+        self.suicide_history = SuicideHistoryParameterSet()
         self.suicidal_thought = SuicidalParameterSet()
         self.escape_behavior = EscapeBehaviorParameterSet()
         self.external_strategy = ExternalParameterSet()
         self.internal_strategy = InternalParameterSet()
+        self.burdensomeness = BurdenParameterSet()
     
     def set_stress_params(
             self,
-            mean=None,
-            sigma=None,
-            reversion=None,
-            E_weight=None):
+            baseline=None,
+            decay=None,
+            impulse_rate=None,
+            impulse_strength=None,
+            morning_impulse=None,
+            alpha=None,
+            beta=None,
+            gamma=None,
+        ):
         """
         Initializes or modifies stress parameters.
 
         Parameters
         ----------
-        mean: float
-            Long-term mean of the stress movement.
-        sigma: float
-            Standard deviation of the stochastic jitter of the
-            stress movement.
-        reversion: float
-            Strength of pull towards the mean of the stress
-            movement.
-        E_weight: float
-            Weight of external escape strategies on stress.
+        baseline: float
+            Baseline stress value.
+        decay: float
+            Decay rate of experienced stress.
+        impulse_rate: float
+            Rate of impulses in impulse per time unit.
+        alpha: float
+            Effect of external strategy on baseline stress.
+        beta: float
+            Effect of external strategy on decay rate.
+        gamma: float
+            Effect of external strategy on impulse strength.
         """
         params = {
-            "mean": mean,
-            "sigma": sigma,
-            "reversion": reversion,
-            "E_weight": E_weight,
+            "baseline": baseline,
+            "decay": decay,
+            "impulse_rate": impulse_rate,
+            "impulse_strength": impulse_strength,
+            "morning_impulse": morning_impulse,
+            "alpha": alpha,
+            "beta": beta,
+            "gamma": gamma,
         }
 
         for name, value in params.items():
@@ -62,8 +77,8 @@ class Parameters(ABC):
             T_weight=None,
             X_weight=None,
             I_weight=None,
-            F_weight=None,
             B_weight=None,
+            c_weight=None,
         ):
         """
         Initializes or modifies aversive internal state
@@ -101,8 +116,8 @@ class Parameters(ABC):
             "T_weight": T_weight,
             "X_weight": X_weight,
             "I_weight": I_weight,
-            "F_weight": F_weight,
             "B_weight": B_weight,
+            "c_weight": c_weight,
         }
 
         for name, value in params.items():
@@ -113,6 +128,8 @@ class Parameters(ABC):
             self,
             feedback=None,
             A_weight=None,
+            M_weight=None,
+            C_weight=None,
         ):
         """
         Initializes or modifies urge to escape parameters.
@@ -129,15 +146,37 @@ class Parameters(ABC):
         params = {
             "feedback": feedback,
             "A_weight": A_weight,
+            "M_weight": M_weight,
+            "C_weight": C_weight,
         }
 
         for name, value in params.items():
             if value is not None:
                 setattr(self.urge_to_escape, name, value)
     
+    def set_suicide_history_params(
+            self,
+            decay=None,
+        ):
+        """
+        Initializes or modifies suicide history parameters.
+
+        Parameters
+        ----------
+        decay: float
+            Rate at which memory of suicidal thought decays
+        """
+        params = {
+            "decay": decay,
+        }
+
+        for name, value in params.items():
+            if value is not None:
+                setattr(self.suicide_history, name, value)
+    
     def set_suicidal_thought_params(
             self,
-            weight_new=None,
+            feedback=None,
             sig_middle=None,
             sig_steepness=None,
         ):
@@ -146,7 +185,7 @@ class Parameters(ABC):
 
         Parameters
         ----------
-        weight_new: float
+        feedback: float
             Weight of suicidal thought based on current
             parameters compared to feedback of suicidal
             thoughts from previous timestep
@@ -158,7 +197,7 @@ class Parameters(ABC):
             the onset of suicidal thoughts
         """
         params = {
-            "weight_new": weight_new,
+            "feedback": feedback,
             "sig_middle": sig_middle,
             "sig_steepness": sig_steepness,
         }
@@ -169,7 +208,7 @@ class Parameters(ABC):
     
     def set_escape_behavior_params(
             self,
-            weight_new=None,
+            feedback=None,
             sig_middle=None,
             sig_steepness=None,
         ):
@@ -178,7 +217,7 @@ class Parameters(ABC):
 
         Parameters
         ----------
-        weight_new: float
+        feedback: float
             Weight of suicidal thought based on current
             parameters compared to feedback of escape 
             behavior from previous timestep
@@ -190,7 +229,7 @@ class Parameters(ABC):
             the onset of escape behavior
         """
         params = {
-            "weight_new": weight_new,
+            "feedback": feedback,
             "sig_middle": sig_middle,
             "sig_steepness": sig_steepness,
         }
@@ -273,14 +312,36 @@ class Parameters(ABC):
             if value is not None:
                 setattr(self.internal_strategy, name, value)
     
+    def set_burdensomeness_params(
+        self,
+        neighbors=None,
+        neighbor_ws=None,
+        feedback=None,
+        A_weight=None,
+        I_weight=None,
+        B_lonely=None,
+        ):
+        params = {
+            "neighbors": neighbors,
+            "neighbor_ws": neighbor_ws,
+            "feedback": feedback,
+            "A_weight": A_weight,
+            "I_weight": I_weight,
+            "B_lonely": B_lonely,
+        }
+
+        for name, value in params.items():
+            if value is not None:
+                setattr(self.burdensomeness, name, value)
+    
     def get_A_params(
             self,
             stress,
             suicidal_thought,
             escape_behavior,
             internal_strat,
-            friend_influence,
-            bully_influence,
+            burdensomeness,
+            clustering_coefficient,
     ):
         """
         Gathers all aversive internal state parameters into
@@ -291,29 +352,47 @@ class Parameters(ABC):
             "T": suicidal_thought,
             "X": escape_behavior,
             "I": internal_strat,
-            "F": friend_influence,
-            "B": bully_influence,
+            "B": burdensomeness,
+            "clustering_coefficient": clustering_coefficient,
             "feedback": self.aversion.feedback,
             "carrying_capacity": self.aversion.carrying_capacity,
             "S_weight": self.aversion.S_weight,
             "T_weight": self.aversion.T_weight,
             "X_weight": self.aversion.X_weight,
             "I_weight": self.aversion.I_weight,
-            "F_weight": self.aversion.F_weight,
             "B_weight": self.aversion.B_weight,
+            "c_weight": self.aversion.c_weight,
         }
     
     def get_U_params(
             self,
-            aversive_internal_state
+            aversive_internal_state,
+            suicide_history,
+            connectedness,
     ):
         """
         Gathers all urge to escape parameters into a dictionary.
         """
         return {
             "A": aversive_internal_state,
+            "M": suicide_history,
+            "C": connectedness,
             "feedback": self.urge_to_escape.feedback,
             "A_weight": self.urge_to_escape.A_weight,
+            "M_weight": self.urge_to_escape.M_weight,
+            "C_weight": self.urge_to_escape.C_weight,
+        }
+    
+    def get_M_params(
+            self,
+            suicidal_thought,
+    ):
+        """
+        Gathers all suicide histroy parameters into a dictionary.
+        """
+        return {
+            "T": suicidal_thought,
+            "decay": self.suicide_history.decay,
         }
     
     def get_T_params(
@@ -325,7 +404,7 @@ class Parameters(ABC):
         """
         return {
             "U": urge_to_escape,
-            "weight_new": self.suicidal_thought.weight_new,
+            "feedback": self.suicidal_thought.feedback,
             "sig_middle": self.suicidal_thought.sig_middle,
             "sig_steepness": self.suicidal_thought.sig_steepness,
         }
@@ -339,7 +418,7 @@ class Parameters(ABC):
         """
         return {
             "U": urge_to_escape,
-            "weight_new": self.escape_behavior.weight_new,
+            "feedback": self.escape_behavior.feedback,
             "sig_middle": self.escape_behavior.sig_middle,
             "sig_steepness": self.escape_behavior.sig_steepness,
         }
@@ -376,4 +455,21 @@ class Parameters(ABC):
             "carrying_capacity": self.internal_strategy.carrying_capacity,
             "A_weight": self.internal_strategy.A_weight,
             "U_weight": self.internal_strategy.U_weight,
+        }
+    
+    def get_B_params(
+        self,
+        internal_strategy,
+        ):
+        neighbor_As = []
+        for agent in self.burdensomeness.neighbors:
+            neighbor_As.append(agent.aversive_internal_state)
+        return {
+            "neighbor_As": neighbor_As,
+            "neighbor_ws": self.burdensomeness.neighbor_ws,
+            "I": internal_strategy,
+            "feedback": self.burdensomeness.feedback,
+            "A_weight": self.burdensomeness.A_weight,
+            "I_weight": self.burdensomeness.I_weight,
+            "B_lonely": self.burdensomeness.B_lonely,
         }

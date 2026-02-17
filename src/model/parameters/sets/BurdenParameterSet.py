@@ -1,12 +1,15 @@
-class EscapeBehaviorParameterSet():
+class BurdenParameterSet():
     """
-    Record class for escape behavior (X) parameters
+    Record class for burdensomeness (B) parameters
     """
     def __init__(
             self,
+            neighbors = [],
+            neighbor_ws = [],
             feedback=0,
-            sig_middle=0,
-            sig_steepness=0,
+            A_weight=0,
+            I_weight=0,
+            B_lonely=0,
         ):
         """
         Initializes escape behavior parameters.
@@ -24,6 +27,9 @@ class EscapeBehaviorParameterSet():
             Steepness of the sigmoidal curve representing
             the onset of escape behavior
         """
+        self.neighbors = neighbors
+        self.neighbor_ws = neighbor_ws
         self.feedback = feedback
-        self.sig_middle = sig_middle
-        self.sig_steepness = sig_steepness
+        self.A_weight = A_weight
+        self.I_weight = I_weight
+        self.B_lonely = B_lonely

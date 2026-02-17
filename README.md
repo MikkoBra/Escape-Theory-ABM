@@ -18,17 +18,23 @@ src/
 |   |
 │   ├── parameters/
 |   |   ├── sets/                  # Record classes to contain parameters per update equation
-|   |   ├── Parameters.py          # Abstract parameters superclass with getters/setters for all equation sets
-|   |   ├── DefaultParameters.py   # Extension of Parameters that initializes with default values for all update equations
-|   |   ├── VolatileParameters.py  # Extension of DefaultParameters that sets higher stress sd, and lower suicidal thought and escape behavior thresholds
-|   |   └── StateParameters.py     # Class containing parameters required for calculation of state effects and duration
+|   |   ├── Parameters.py          # Abstract parameters superclass with getters/setters for all
+|   |   |                            equation sets
+|   |   ├── DefaultParameters.py   # Extension of Parameters that initializes with default values
+|   |   |                            for all update equations
+|   |   ├── VolatileParameters.py  # Extension of DefaultParameters that sets higher stress sd,
+|   |   |                            and lower suicidal thought and escape behavior thresholds
+|   |   └── StateParameters.py     # Class containing parameters required for calculation of state
+|   |                                effects and duration
 |   |
-│   ├── system_updates/            # Location state representations, AgentUpdater with evolution functions
+│   ├── system_updates/            # Location state representations, AgentUpdater with evolution
+|   |                                functions
 │   └── SuicideModel.py            # Model class that initializes the environment
 |
 ├── output/                        # Files containing output from runs
 ├── Constants.py                   # Constants used in the model
-├── run_model.py                   # Runs the model with input for number of agents and length of simulation
+├── run_model.py                   # Runs the model with input for number of agents and length
+|                                    of simulation
 └── requirements.txt               # Python library requirements for this model
 .gitignore
 README.md

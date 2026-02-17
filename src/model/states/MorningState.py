@@ -30,19 +30,14 @@ class MorningState(State):
         self.time_left = self.state_length
     
     def modify_parameters(self, params):
-        # Reset from last state
-        params.set_defaults()
-
-        # Modify stress, suicidal thought, and their weights on aversion
+        # Modify stress and suicidal thought
         # based on shortage of sleep
         sleep_deficit = max(0.0, (Constants.HEALTHY_SLEEP - self.sleep) / Constants.HEALTHY_SLEEP)
-        new_s_mean = min(1.0, params.stress.mean + 0.3 * sleep_deficit)
-        params.set_stress_params(mean=new_s_mean)
-        new_t_mid = max(0.0, params.suicidal_thought.sig_middle - 0.2 * sleep_deficit)
-        params.set_suicidal_thought_params(sig_middle=new_t_mid)
-        new_s_weight = params.aversion.S_weight + 3 * sleep_deficit
-        new_t_weight = params.aversion.T_weight + 0.5 * sleep_deficit
-        params.set_aversion_params(S_weight=new_s_weight, T_weight=new_t_weight)
+        morning_impulse = params.stress.impulse_strength * (1 + np.exp(sleep_deficit/Constants.HEALTHY_SLEEP))
+        params.set_stress_params(morning_impulse=morning_impulse, impulse_rate=0)
+        new_T_threshold = params.suicidal_thought.sig_middle - 0.1 * sleep_deficit/Constants.HEALTHY_SLEEP
+        params.set_suicidal_thought_params(sig_middle=new_T_threshold)
+
     
     def to_string(self):
         return self.STATE_NAME

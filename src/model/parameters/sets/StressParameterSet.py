@@ -4,28 +4,38 @@ class StressParameterSet():
     """
     def __init__(
             self,
-            mean=0,
-            sigma=0,
-            reversion=0,
-            E_weight=0
+            baseline=0,
+            decay=0,
+            impulse_rate=0,
+            impulse_strength=0,
+            morning_impulse=0,
+            alpha=0,
+            beta=0,
+            gamma=0,
         ):
         """
         Initializes stress parameters.
 
         Parameters
         ----------
-        mean: float
-            Long-term mean of the stress movement.
-        sigma: float
-            Standard deviation of the stochastic jitter of the
-            stress movement.
-        reversion: float
-            Strength of pull towards the mean of the stress
-            movement.
-        E_weight: float
-            Weight of external escape strategies on stress.
+        baseline: float
+            Baseline stress value.
+        decay: float
+            Decay rate of experienced stress.
+        impulse_rate: float
+            Rate of impulses in impulse per time unit.
+        alpha: float
+            Effect of external strategy on baseline stress.
+        beta: float
+            Effect of external strategy on decay rate.
+        gamma: float
+            Effect of external strategy on impulse strength.
         """
-        self.mean = mean
-        self.sigma = sigma
-        self.reversion = reversion
-        self.E_weight = E_weight
+        self.baseline = baseline
+        self.decay = decay
+        self.impulse_rate = impulse_rate
+        self.impulse_strength = impulse_strength
+        self.morning_impulse=morning_impulse
+        self.alpha = alpha
+        self.beta = beta
+        self.gamma = gamma

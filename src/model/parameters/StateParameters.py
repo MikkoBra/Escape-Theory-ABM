@@ -2,7 +2,7 @@ import numpy as np
 from Constants import Constants
 
 class StateParameters():
-    def set_sleep_params(self, mean=7, sigma=2):
+    def set_sleep_params(self, mean=8, sigma=2):
         self.mean_sleep = mean
         self.sigma_sleep = sigma
     

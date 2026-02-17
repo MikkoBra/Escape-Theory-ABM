@@ -10,8 +10,8 @@ class AversionParameterSet():
             T_weight=0,
             X_weight=0,
             I_weight=0,
-            F_weight=0,
             B_weight=0,
+            c_weight=0,
         ):
         """
         Initializes aversive internal state parameters.
@@ -37,8 +37,8 @@ class AversionParameterSet():
         I_weight: float
             Weight of internal escape strategies from previous
             timestep on aversive internal state
-        F_weight: float
-            Weight of social influence from previous timestep
+        B_weight: float
+            Weight of social burden from previous timestep
             on aversive internal state
         """
         self.feedback = feedback
@@ -47,5 +47,5 @@ class AversionParameterSet():
         self.T_weight = T_weight
         self.X_weight = X_weight
         self.I_weight = I_weight
-        self.F_weight = F_weight
         self.B_weight = B_weight
+        self.c_weight = c_weight
