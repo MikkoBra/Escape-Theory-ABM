@@ -35,6 +35,7 @@ class Parameters(ABC):
             alpha=None,
             beta=None,
             gamma=None,
+            sigma=None,
         ):
         """
         Initializes or modifies stress parameters.
@@ -63,6 +64,7 @@ class Parameters(ABC):
             "alpha": alpha,
             "beta": beta,
             "gamma": gamma,
+            "sigma": sigma,
         }
 
         for name, value in params.items():
@@ -333,6 +335,27 @@ class Parameters(ABC):
         for name, value in params.items():
             if value is not None:
                 setattr(self.burdensomeness, name, value)
+    
+    def get_S_params(
+            self,
+            external_strat,
+    ):
+        """
+        Gathers all aversive internal state parameters into
+        a dictionary.
+        """
+        return {
+            "E": external_strat,
+            "baseline": self.stress.baseline,
+            "decay": self.stress.decay,
+            "impulse_rate": self.stress.impulse_rate,
+            "impulse_strength": self.stress.impulse_strength,
+            "morning_impulse": self.stress.morning_impulse,
+            "alpha": self.stress.alpha,
+            "beta": self.stress.beta,
+            "gamma": self.stress.gamma,
+            "sigma": self.stress.sigma,
+        }
     
     def get_A_params(
             self,

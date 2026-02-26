@@ -1,4 +1,4 @@
-from model.SuicideModel import SuicideModel
+from model.models.SocialEffectsModel import SuicideModel
 import numpy as np
 from tqdm import trange
 from pathlib import Path

@@ -12,6 +12,7 @@ class StressParameterSet():
             alpha=0,
             beta=0,
             gamma=0,
+            sigma=0,
         ):
         """
         Initializes stress parameters.
@@ -39,3 +40,4 @@ class StressParameterSet():
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
+        self.sigma = sigma

@@ -20,9 +20,12 @@ class HomeState(State):
         
         # Compute end time in minutes
         self._start_time = time
-        mean_sleep = state_params.mean_sleep
-        sigma_sleep = state_params.sigma_sleep
-        sleep_hours = max(1, np.random.normal(mean_sleep, sigma_sleep))
+        if state_params.consistent_sleep is not None:
+            sleep_hours = state_params.consistent_sleep
+        else:
+            mean_sleep = state_params.mean_sleep
+            sigma_sleep = state_params.sigma_sleep
+            sleep_hours = max(1, np.random.normal(mean_sleep, sigma_sleep))
         sleep_length = sleep_hours * Constants.DAY_LENGTH * (1/24)
         
         time_of_day = time % Constants.DAY_LENGTH
@@ -40,8 +43,8 @@ class HomeState(State):
         new_middle = max(params.escape_behavior.sig_middle - 0.02, 0)
         params.set_escape_behavior_params(sig_middle=new_middle)
 
-        # # New suicidal thoughts are weighted heavier
-        updated_weight = min(params.suicidal_thought.feedback + 0.1, 1)
+        # Suicidal thought decays less quickly
+        updated_weight = max(params.suicidal_thought.feedback - 0.1, 0)
         params.set_suicidal_thought_params(feedback=updated_weight)
     
     def to_string(self):

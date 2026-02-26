@@ -6,41 +6,49 @@ import random
 import networkx as nx
 
 
-class SuicideModel(mesa.Model):
+class SocialEffectsModel(mesa.Model):
     """
     Agent-based model of suicidality in a small world network.
     """
 
-    def __init__(self, dt, n=10, seed=None, parameters=None, stress_gen=False):
+    def __init__(self, dt, n=10, seed=None, parameters={}, stress_gen=False, collect_all=True, verbose=False):
         super().__init__(seed=seed)
         if seed is not None:
             random.seed(seed)
             np.random.seed(seed)
+        self.verbose = verbose
         self.dt = dt
         self.num_agents = n
         self.time = 0
-        self.datacollector = mesa.DataCollector(
-            agent_reporters={
-                "Stress": "stress",
-                "Aversive Internal State": "aversive_internal_state",
-                "Urge to Escape": "urge_to_escape",
-                "Suicidal Thought": "suicidal_thought",
-                "Time Suicidal": "time_suicidal",
-                "Suicide History": "suicide_history",
-                "Escape Behavior": "escape_behavior",
-                "External-Focused Change": "external_strat",
-                "Internal-Focused Change": "internal_strat",
-                "Social Burden": "burdensomeness",
-                "Time": "total_time",
-                "State": lambda agent: agent.state_manager.state.to_string(),
-            }
-        )
+        if collect_all:
+            self.datacollector = mesa.DataCollector(
+                agent_reporters={
+                    "Stress": "stress",
+                    "Aversive Internal State": "aversive_internal_state",
+                    "Urge to Escape": "urge_to_escape",
+                    "Suicidal Thought": "suicidal_thought",
+                    "Escape Behavior": "escape_behavior",
+                    "External-Focused Change": "external_strat",
+                    "Internal-Focused Change": "internal_strat",
+                    "Social Burden": "burdensomeness",
+                    "Time": "total_time",
+                    "State": lambda agent: agent.state_manager.state.to_string(),
+                }
+            )
+        else:
+            self.datacollector = mesa.DataCollector(
+                agent_reporters={
+                    "Suicidal Thought": "suicidal_thought",
+                    "Time": "total_time",
+                }
+            )
         register_all_states()
         
         if stress_gen:
-            AgentFactory.create_agents(type=parameters["type"], model=self, n=self.num_agents)
+            AgentFactory.create_agents(type=parameters["type"], model=self, n=self.num_agents, stress_gen=True, default_params=parameters)
         else:
-            AgentFactory.create_agents(type="standard", model=self, n=self.num_agents)
+            AgentFactory.create_agents(type="standard", model=self, n=self.num_agents-1, default_params=parameters)
+            AgentFactory.create_agents(type="sleep", model=self, n=1, default_params=parameters)
         
         mean_degree = self.num_agents - 1
         self.assign_connections(k=mean_degree, seed=seed)
@@ -62,10 +70,11 @@ class SuicideModel(mesa.Model):
         agents = list(self.agents)
         N = len(agents)
         self.network = nx.newman_watts_strogatz_graph(n=N, k=k, p=p, seed=seed)
-        print(f"Number of edges:{self.network.number_of_edges()}")
+        if self.verbose:
+            print(f"Number of edges:{self.network.number_of_edges()}")
 
-        # Initialize edge weights
-        print("Assigning edge weights.")
+            # Initialize edge weights
+            print("Assigning edge weights.")
         for u, v in self.network.edges():
             agent_1 = self.agents[u]
             agent_2 = self.agents[v]
@@ -81,7 +90,8 @@ class SuicideModel(mesa.Model):
                 self.network.edges[u, v]["strength"] = np.random.uniform(0.05, 0.1)
         
         # Initialize agent clustering coefficients
-        print("Initializing clustering coefficients.")
+        if self.verbose:
+            print("Initializing clustering coefficients.")
         for agent in agents:
             agent.network_id = agent.unique_id - 1
             neighbors = list(self.network.neighbors(agent.network_id))

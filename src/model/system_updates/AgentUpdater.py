@@ -10,31 +10,36 @@ class AgentUpdater():
     
     def stress(
             self,
+            prev_state,
             dt,
-            prev_stress,
-            prev_E,
-            baseline=0.2,
-            decay=0.15,
-            impulse_rate=5,
-            impulse_strength=0.1,
-            morning_impulse=0,
-            alpha=0,
-            beta=0,
-            gamma=0,
-            sigma=0.12
+            params,
     ):
         """
         Models stress evolution.
         """
+        try:
+            E = params["E"]
+            baseline = params["baseline"]
+            decay = params["decay"]
+            impulse_rate = params["impulse_rate"]
+            impulse_strength = params["impulse_strength"]
+            morning_impulse = params["morning_impulse"]
+            alpha = params["alpha"]
+            beta = params["beta"]
+            gamma = params["gamma"]
+            sigma = params["sigma"]
+        except KeyError as e:
+            raise Exception(f"Missing parameter {e.args[0]}"+
+                            " for aversive internal state evolution")
         def poisson_event(rate, dt):
             return np.random.poisson(rate * dt)
-        B_t = baseline + alpha * prev_E
-        lambda_t = decay + beta * prev_E
+        B_t = baseline + alpha * E
+        lambda_t = decay + beta * E
         if morning_impulse > 0:
             I_t = morning_impulse
         else:
-            I_t = poisson_event(impulse_rate, dt) * impulse_strength * (1 - gamma * prev_E) 
-        stress = B_t + np.exp(-lambda_t*dt) * (prev_stress - B_t) + I_t
+            I_t = poisson_event(impulse_rate, dt) * impulse_strength * (1 - gamma * E) 
+        stress = B_t + np.exp(-lambda_t*dt) * (prev_state - B_t) + I_t
         dW = np.random.normal(0, np.sqrt(dt))
         stress += dW * sigma
         if stress < 0:
@@ -106,14 +111,16 @@ class AgentUpdater():
         try:
             A = params["A"]
             M = params["M"]
+            C = params["C"]
             feedback = params["feedback"]
             A_weight = params["A_weight"]
             M_weight = params["M_weight"]
+            C_weight = params["C_weight"]
         except KeyError as e:
             print(f"Missing parameter {e.args[0]}"+
                             " for urge to escape evolution")
             raise Exception("Terminating program")
-        new_state = prev_state + dt * (-feedback * prev_state  + A_weight * A + M_weight * M)
+        new_state = prev_state + dt * (-feedback * prev_state  + A_weight * A + M_weight * M - C_weight * C)
 
         if new_state < 0:
             new_state = 0

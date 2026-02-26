@@ -2,6 +2,11 @@ import numpy as np
 from Constants import Constants
 
 class StateParameters():
+    def __init__(self, params):
+        self.consistent_sleep = None
+        if "sleep" in params:
+            self.consistent_sleep = params["sleep"]
+
     def set_sleep_params(self, mean=8, sigma=2):
         self.mean_sleep = mean
         self.sigma_sleep = sigma

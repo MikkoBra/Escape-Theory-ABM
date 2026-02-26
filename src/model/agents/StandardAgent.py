@@ -5,7 +5,7 @@ from pathlib import Path
 from model.system_updates.AgentUpdater import (
     AgentUpdater
 )
-from model.parameters.DefaultParameters import DefaultParameters
+from model.parameters.DefaultParameterFactory import DefaultParameterFactory
 from model.parameters.StateParameters import StateParameters
 from model.system_updates.StateManager import StateManager
 from model.states.SleepState import SleepState
@@ -19,20 +19,21 @@ class StandardAgent(mesa.Agent):
     time_values = None
     stress_values = None
 
-    def __init__(self, model, stress_gen=False):
+    def __init__(self, model, stress_gen=False, default_params={}, state_params={}):
         """
         Initializes the agent with a default stress value.
         """
         super().__init__(model)
         self.type = "standard"
         self.updater = AgentUpdater()
-        self.parameters = DefaultParameters()
+        self.parameters = DefaultParameterFactory().create_default_parameters(parameters=default_params)
+        self.stress_gen = stress_gen
         if stress_gen:
             self.parameters.set_stress_params(impulse_rate=0)
 
         # Initialize state-specific values
-        self.state_params = StateParameters()
-        self.state_params.set_commute()         # should be constant
+        self.state_params = StateParameters(state_params)
+        self.state_params.set_commute()
         self.state_params.set_sleep_params()
 
         self.state_manager = StateManager(self.state_params)
@@ -41,8 +42,9 @@ class StandardAgent(mesa.Agent):
         self.close_connections = 15
         self.medium_connections = 35
         self.clustering_coefficient = 0
+        self.temperature = 0.5
         self.stress = 0
-        self.aversive_internal_state = 0.2
+        self.aversive_internal_state = 0
         self.urge_to_escape = 0
         self.suicide_history = 0
         self.suicidal_thought = 0
@@ -51,7 +53,6 @@ class StandardAgent(mesa.Agent):
         self.internal_strat = 0
         self.burdensomeness = 0
         self.total_time = 0
-        self.temperature = 0.5
         self.state_manager.state = SleepState()
         self.state_manager.state.generate_time(0, None, self.state_params)
     
@@ -92,6 +93,16 @@ class StandardAgent(mesa.Agent):
         """
         Updates the agent over timestep dt.
         """
+
+        if self.stress_gen:
+            params = self.parameters.get_S_params(
+                external_strat=self.external_strat
+            )
+            new_S = self.updater.stress(
+                prev_state=self.stress,
+                dt=dt,
+                params=params
+            )
 
         # Update aversive internal state
         params = self.parameters.get_A_params(
@@ -175,6 +186,8 @@ class StandardAgent(mesa.Agent):
             params=params
         )
         
+        if self.stress_gen:
+            self.stress = new_S
         self.aversive_internal_state = new_A
         self.urge_to_escape = new_U
         self.suicide_history = new_M
@@ -185,9 +198,10 @@ class StandardAgent(mesa.Agent):
         self.burdensomeness = new_B
         self.total_time += dt
 
-        values = StandardAgent.stress_values
-        idx = int(self.total_time/dt)
-        self.stress = values[idx]
+        if not self.stress_gen:
+            values = StandardAgent.stress_values
+            idx = int(self.total_time/dt)
+            self.stress = values[idx]
 
         if self.state_manager.state.STATE_NAME == "morning":
             self.parameters.set_stress_params(morning_impulse=0)
