@@ -1,6 +1,6 @@
 import mesa
-from model.agents.AgentFactory import AgentFactory
-from model.system_updates.state_registry import register_all_states
+from model.sleep_deprivation.agents.AgentFactory import AgentFactory
+from model.dynamics.state_registry import register_all_states
 import numpy as np
 import random
 import networkx as nx

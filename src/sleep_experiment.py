@@ -5,7 +5,7 @@ from itertools import islice
 from scipy.stats import ttest_ind, mannwhitneyu
 import matplotlib.pyplot as plt
 
-from model.models.SleepModel import SleepModel
+from model.sleep_deprivation.models.SleepModel import SleepModel
 
 N_RUNS = 1000
 DT = 0.1
@@ -82,8 +82,8 @@ def load_results():
     with open(FILENAME, "r") as f:
         sim_results = json.load(f)
 
-    sleep_T, bad_T, wang_T = [], [], []
-    sleep_A, bad_A, wang_A = [], [], []
+    sleep_T, bad_T, baseline_T = [], [], []
+    sleep_A, bad_A, baseline_A = [], [], []
 
     for sim in sim_results:
         for agent in sim["agents"]:
@@ -98,14 +98,14 @@ def load_results():
                 bad_A.append(agent["auc_A"])
 
             elif aid == 3:
-                wang_T.append(agent["auc_T"])
-                wang_A.append(agent["auc_A"])
-    return sleep_T, sleep_A, bad_T, bad_A, wang_T, wang_A
+                baseline_T.append(agent["auc_T"])
+                baseline_A.append(agent["auc_A"])
+    return sleep_T, sleep_A, bad_T, bad_A, baseline_T, baseline_A
 
 AGENTS = [
     ("Good Sleep", "sleep"),
     ("Bad Sleep",  "bad"),
-    ("Wang",       "wang"),
+    ("Baseline",       "baseline"),
 ]
 
 # Okabe-Ito colorblind-friendly palette
@@ -124,7 +124,7 @@ def plot_overlaid_distribution(datasets, labels, title, xlabel, bins=30):
     legend_texts = []
 
     for data, label, color in zip(datasets, labels, COLORS):
-        if label == "Wang":
+        if label == "Baseline":
             label = "Baseline"
         data  = np.asarray(data)
         mu    = np.mean(data)
@@ -164,11 +164,11 @@ def plot_overlaid_distribution(datasets, labels, title, xlabel, bins=30):
 
 
 def plot_results():
-    sleep_T, sleep_A, bad_T, bad_A, wang_T, wang_A = load_results()
+    sleep_T, sleep_A, bad_T, bad_A, baseline_T, baseline_A = load_results()
 
     labels   = [name for name, _ in AGENTS]
-    T_arrays = [sleep_T, bad_T, wang_T]
-    A_arrays = [sleep_A, bad_A, wang_A]
+    T_arrays = [sleep_T, bad_T, baseline_T]
+    A_arrays = [sleep_A, bad_A, baseline_A]
 
     plot_overlaid_distribution(
         T_arrays, labels,
@@ -185,12 +185,12 @@ def plot_results():
 
 def perform_t_test():
 
-    sleep_T, sleep_A, bad_T, bad_A, wang_T, wang_A = load_results()
+    sleep_T, sleep_A, bad_T, bad_A, baseline_T, baseline_A = load_results()
 
     comparisons = [
         ("Good Sleep", "Bad Sleep", sleep_T, bad_T, sleep_A, bad_A),
-        ("Good Sleep", "Wang",      sleep_T, wang_T, sleep_A, wang_A),
-        ("Bad Sleep",  "Wang",      bad_T,   wang_T, bad_A,   wang_A),
+        ("Good Sleep", "Baseline",      sleep_T, baseline_T, sleep_A, baseline_A),
+        ("Bad Sleep",  "Baseline",      bad_T,   baseline_T, bad_A,   baseline_A),
     ]
 
     print("\n=== Means tests (independent samples) ===\n")
@@ -224,5 +224,5 @@ def perform_t_test():
 
 if __name__ == "__main__":
     # main()
-    plot_results()
+    # plot_results()
     perform_t_test()

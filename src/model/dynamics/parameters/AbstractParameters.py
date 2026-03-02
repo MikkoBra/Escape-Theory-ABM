@@ -1,17 +1,17 @@
-from model.parameters.sets.StressParameterSet import StressParameterSet
-from model.parameters.sets.AversionParameterSet import AversionParameterSet
-from model.parameters.sets.UrgeToEscapeParameterSet import UrgeToEscapeParameterSet
-from model.parameters.sets.SuicidalParameterSet import SuicidalParameterSet
-from model.parameters.sets.EscapeBehaviorParameterSet import EscapeBehaviorParameterSet
-from model.parameters.sets.ExternalParameterSet import ExternalParameterSet
-from model.parameters.sets.InternalParameterSet import InternalParameterSet
-from model.parameters.sets.SuicideHistoryParameterSet import SuicideHistoryParameterSet
-from model.parameters.sets.BurdenParameterSet import BurdenParameterSet
+from model.dynamics.parameters.sets.StressParameterSet import StressParameterSet
+from model.dynamics.parameters.sets.AversionParameterSet import AversionParameterSet
+from model.dynamics.parameters.sets.UrgeToEscapeParameterSet import UrgeToEscapeParameterSet
+from model.dynamics.parameters.sets.SuicidalParameterSet import SuicidalParameterSet
+from model.dynamics.parameters.sets.EscapeBehaviorParameterSet import EscapeBehaviorParameterSet
+from model.dynamics.parameters.sets.ExternalParameterSet import ExternalParameterSet
+from model.dynamics.parameters.sets.InternalParameterSet import InternalParameterSet
+from model.dynamics.parameters.sets.SuicideHistoryParameterSet import SuicideHistoryParameterSet
+from model.dynamics.parameters.sets.BurdenParameterSet import BurdenParameterSet
 from abc import ABC
 
 class Parameters(ABC):
     """
-    Abstract class to extend for containing and modifying parameters
+    Abstract class to extend for containing and modifying coefficients
     to use in update equations.
     """
     def __init__(self):
@@ -25,7 +25,7 @@ class Parameters(ABC):
         self.internal_strategy = InternalParameterSet()
         self.burdensomeness = BurdenParameterSet()
     
-    def set_stress_params(
+    def set_stress_coefficients(
             self,
             baseline=None,
             decay=None,
@@ -38,7 +38,7 @@ class Parameters(ABC):
             sigma=None,
         ):
         """
-        Initializes or modifies stress parameters.
+        Initializes or modifies stress coefficients.
 
         Parameters
         ----------
@@ -48,6 +48,10 @@ class Parameters(ABC):
             Decay rate of experienced stress.
         impulse_rate: float
             Rate of impulses in impulse per time unit.
+        impulse_strength: float
+            Strength of a single impulse
+        morning_impulse: None
+            Strength of the stress impulse after sleeping
         alpha: float
             Effect of external strategy on baseline stress.
         beta: float
@@ -55,7 +59,7 @@ class Parameters(ABC):
         gamma: float
             Effect of external strategy on impulse strength.
         """
-        params = {
+        coefficients = {
             "baseline": baseline,
             "decay": decay,
             "impulse_rate": impulse_rate,
@@ -67,11 +71,11 @@ class Parameters(ABC):
             "sigma": sigma,
         }
 
-        for name, value in params.items():
+        for name, value in coefficients.items():
             if value is not None:
                 setattr(self.stress, name, value)
     
-    def set_aversion_params(
+    def set_aversion_coefficients(
             self,
             feedback=None,
             carrying_capacity=None,
@@ -84,7 +88,7 @@ class Parameters(ABC):
         ):
         """
         Initializes or modifies aversive internal state
-        parameters.
+        coefficients.
 
         Parameters
         ----------
@@ -107,11 +111,13 @@ class Parameters(ABC):
         I_weight: float
             Weight of internal escape strategies from previous
             timestep on aversive internal state
-        F_weight: float
-            Weight of social influence from previous timestep
+        B_weight: float
+            Weight of social burden from previous timestep
             on aversive internal state
+        c_weight: float
+            Weight of clustering coefficient on aversive internal state
         """
-        params = {
+        coefficients = {
             "feedback": feedback,
             "carrying_capacity": carrying_capacity,
             "S_weight": S_weight,
@@ -122,11 +128,11 @@ class Parameters(ABC):
             "c_weight": c_weight,
         }
 
-        for name, value in params.items():
+        for name, value in coefficients.items():
             if value is not None:
                 setattr(self.aversion, name, value)
     
-    def set_urge_to_escape_params(
+    def set_urge_to_escape_coefficients(
             self,
             feedback=None,
             A_weight=None,
@@ -134,7 +140,7 @@ class Parameters(ABC):
             C_weight=None,
         ):
         """
-        Initializes or modifies urge to escape parameters.
+        Initializes or modifies urge to escape coefficients.
 
         Parameters
         ----------
@@ -144,46 +150,53 @@ class Parameters(ABC):
         A_weight: float
             Weight of aversive internal state from previous
             timestep on urge to escape
+        M_weight: float
+            Weight of memory of suicidal thought from previous
+            timestep on urge to escape
+        C_weight: float
+            Weight of connectedness from previous
+            timestep on urge to escape
+        
         """
-        params = {
+        coefficients = {
             "feedback": feedback,
             "A_weight": A_weight,
             "M_weight": M_weight,
             "C_weight": C_weight,
         }
 
-        for name, value in params.items():
+        for name, value in coefficients.items():
             if value is not None:
                 setattr(self.urge_to_escape, name, value)
     
-    def set_suicide_history_params(
+    def set_suicide_history_coefficients(
             self,
             decay=None,
         ):
         """
-        Initializes or modifies suicide history parameters.
+        Initializes or modifies suicide history coefficients.
 
         Parameters
         ----------
         decay: float
             Rate at which memory of suicidal thought decays
         """
-        params = {
+        coefficients = {
             "decay": decay,
         }
 
-        for name, value in params.items():
+        for name, value in coefficients.items():
             if value is not None:
                 setattr(self.suicide_history, name, value)
     
-    def set_suicidal_thought_params(
+    def set_suicidal_thought_coefficients(
             self,
             feedback=None,
             sig_middle=None,
             sig_steepness=None,
         ):
         """
-        Initializes or modifies suicidal thought parameters.
+        Initializes or modifies suicidal thought coefficients.
 
         Parameters
         ----------
@@ -198,29 +211,29 @@ class Parameters(ABC):
             Steepness of the sigmoidal curve representing
             the onset of suicidal thoughts
         """
-        params = {
+        coefficients = {
             "feedback": feedback,
             "sig_middle": sig_middle,
             "sig_steepness": sig_steepness,
         }
 
-        for name, value in params.items():
+        for name, value in coefficients.items():
             if value is not None:
                 setattr(self.suicidal_thought, name, value)
     
-    def set_escape_behavior_params(
+    def set_escape_behavior_coefficients(
             self,
             feedback=None,
             sig_middle=None,
             sig_steepness=None,
         ):
         """
-        Initializes escape behavior parameters.
+        Initializes escape behavior coefficients.
 
         Parameters
         ----------
         feedback: float
-            Weight of suicidal thought based on current
+            Weight of escape behavior based on current
             parameters compared to feedback of escape 
             behavior from previous timestep
         sig_middle: float
@@ -230,17 +243,17 @@ class Parameters(ABC):
             Steepness of the sigmoidal curve representing
             the onset of escape behavior
         """
-        params = {
+        coefficients = {
             "feedback": feedback,
             "sig_middle": sig_middle,
             "sig_steepness": sig_steepness,
         }
 
-        for name, value in params.items():
+        for name, value in coefficients.items():
             if value is not None:
                 setattr(self.escape_behavior, name, value)
     
-    def set_external_strategy_params(
+    def set_external_strategy_coefficients(
             self,
             feedback=None,
             carrying_capacity=None,
@@ -248,7 +261,7 @@ class Parameters(ABC):
             U_weight=None,
         ):
         """
-        Initializes external escape strategy parameters.
+        Initializes external escape strategy coefficients.
 
         Parameters
         ----------
@@ -266,18 +279,18 @@ class Parameters(ABC):
             Weight of urge to escape from previous timestep
             on external escape strategy
         """
-        params = {
+        coefficients = {
             "feedback": feedback,
             "carrying_capacity": carrying_capacity,
             "A_weight": A_weight,
             "U_weight": U_weight,
         }
 
-        for name, value in params.items():
+        for name, value in coefficients.items():
             if value is not None:
                 setattr(self.external_strategy, name, value)
     
-    def set_internal_strategy_params(
+    def set_internal_strategy_coefficients(
             self,
             feedback=None,
             carrying_capacity=None,
@@ -285,7 +298,7 @@ class Parameters(ABC):
             U_weight=None,
         ):
         """
-        Initializes internal escape strategy parameters.
+        Initializes internal escape strategy coefficients.
 
         Parameters
         ----------
@@ -303,18 +316,18 @@ class Parameters(ABC):
             Weight of urge to escape from previous timestep
             on internal escape strategy
         """
-        params = {
+        coefficients = {
             "feedback": feedback,
             "carrying_capacity": carrying_capacity,
             "A_weight": A_weight,
             "U_weight": U_weight,
         }
 
-        for name, value in params.items():
+        for name, value in coefficients.items():
             if value is not None:
                 setattr(self.internal_strategy, name, value)
     
-    def set_burdensomeness_params(
+    def set_burdensomeness_coefficients(
         self,
         neighbors=None,
         neighbor_ws=None,
@@ -323,7 +336,28 @@ class Parameters(ABC):
         I_weight=None,
         B_lonely=None,
         ):
-        params = {
+        """
+        Initializes social burden coefficients.
+
+        Parameters
+        ----------
+        neighbors: List<Agent>
+            List of connected agents
+        neighbor_ws: List<float>
+            List of weights associated with agent connections
+        feedback: float
+            Strength of feedback from previous state of
+            social burden
+        A_weight: float
+            Weight of aversive internal state from previous 
+            timestep on internal escape strategy
+        I_weight: float
+            Weight of internal escape strategy from previous timestep
+            on social burden
+        B_lonely: float
+            Value of social burden when the agent has no connections
+        """
+        coefficients = {
             "neighbors": neighbors,
             "neighbor_ws": neighbor_ws,
             "feedback": feedback,
@@ -332,7 +366,7 @@ class Parameters(ABC):
             "B_lonely": B_lonely,
         }
 
-        for name, value in params.items():
+        for name, value in coefficients.items():
             if value is not None:
                 setattr(self.burdensomeness, name, value)
     
@@ -341,7 +375,7 @@ class Parameters(ABC):
             external_strat,
     ):
         """
-        Gathers all aversive internal state parameters into
+        Gathers all stress coefficients and parameters into
         a dictionary.
         """
         return {
@@ -367,7 +401,7 @@ class Parameters(ABC):
             clustering_coefficient,
     ):
         """
-        Gathers all aversive internal state parameters into
+        Gathers all aversive internal state coefficients and parameters into
         a dictionary.
         """
         return {
@@ -394,7 +428,7 @@ class Parameters(ABC):
             connectedness,
     ):
         """
-        Gathers all urge to escape parameters into a dictionary.
+        Gathers all urge to escape coefficients and parameters into a dictionary.
         """
         return {
             "A": aversive_internal_state,
@@ -411,7 +445,7 @@ class Parameters(ABC):
             suicidal_thought,
     ):
         """
-        Gathers all suicide histroy parameters into a dictionary.
+        Gathers all suicide histroy coefficients and parameters into a dictionary.
         """
         return {
             "T": suicidal_thought,
@@ -423,7 +457,7 @@ class Parameters(ABC):
             urge_to_escape,
     ):
         """
-        Gathers all suicidal thought parameters into a dictionary.
+        Gathers all suicidal thought coefficients and parameters into a dictionary.
         """
         return {
             "U": urge_to_escape,
@@ -437,7 +471,7 @@ class Parameters(ABC):
             urge_to_escape,
     ):
         """
-        Gathers all escape behavior parameters into a dictionary.
+        Gathers all escape behavior coefficients and parameters into a dictionary.
         """
         return {
             "U": urge_to_escape,
@@ -452,7 +486,7 @@ class Parameters(ABC):
             urge_to_escape,
     ):
         """
-        Gathers all external strategy parameters into a dictionary.
+        Gathers all external strategy coefficients and parameters into a dictionary.
         """
         return {
             "A": aversive_internal_state,
@@ -469,7 +503,7 @@ class Parameters(ABC):
             urge_to_escape,
     ):
         """
-        Gathers all internal strategy parameters into a dictionary.
+        Gathers all internal strategy coefficients and parameters into a dictionary.
         """
         return {
             "A": aversive_internal_state,

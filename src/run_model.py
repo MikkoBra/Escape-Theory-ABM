@@ -1,6 +1,5 @@
-from model.models.SocialEffectsModel import SocialEffectsModel
-from model.models.DefaultModel import DefaultModel
-from model.models.SleepModel import SleepModel
+from model.sleep_deprivation.models.DefaultModel import DefaultModel
+from model.sleep_deprivation.models.SleepModel import SleepModel
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
@@ -273,7 +272,7 @@ def run_good_friends_network():
     N_agents = 50
     # Timestep size
     dt = 1/(24*60)
-    model = SocialEffectsModel(dt=dt, n=N_agents)
+    model = DefaultModel(dt=dt, n=N_agents)
     # Days to model
     T = int(input("Enter number of days to model\n> "))
     N_steps = int(T/dt)
@@ -298,7 +297,7 @@ def run_social_network():
     N_agents = 150
     # Timestep size
     dt = 1/(24*60)
-    model = SocialEffectsModel(dt=dt, n=N_agents, parameters={"type": "standard"}, stress_gen=True)
+    model = DefaultModel(dt=dt, n=N_agents, parameters={"type": "standard"}, stress_gen=True)
     # Days to model
     T = int(input("Enter number of days to model\n> "))
     N_steps = int(T/dt)
@@ -323,7 +322,7 @@ def run_custom():
     N_agents = int(input("Enter number of agents\n> "))
     # Timestep size
     dt = 1/(24*60)
-    model = SocialEffectsModel(dt=dt, n=N_agents)
+    model = DefaultModel(dt=dt, n=N_agents)
     # Days to model
     T = int(input("Enter number of days to model\n> "))
     N_steps = int(T/dt)

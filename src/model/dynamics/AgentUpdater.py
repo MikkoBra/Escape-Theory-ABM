@@ -16,6 +16,13 @@ class AgentUpdater():
     ):
         """
         Models stress evolution.
+
+        prev_state: float
+            Value of stress in the previous timestep
+        dt: float
+            Time delta (amount of time to progress)
+        params: dict
+            Dictionary containing the required parameters
         """
         try:
             E = params["E"]
@@ -52,6 +59,10 @@ class AgentUpdater():
         """
         Evolution equation of aversive internal state.
 
+        prev_state: float
+            Value of stress in the previous timestep
+        dt: float
+            Time delta (amount of time to progress)
         params: dict
             Dictionary containing the required parameters
         """
@@ -105,6 +116,10 @@ class AgentUpdater():
         """
         Evolution equation of urge to escape.
 
+        prev_state: float
+            Value of stress in the previous timestep
+        dt: float
+            Time delta (amount of time to progress)
         params: dict
             Dictionary containing the required parameters
         """
@@ -137,6 +152,10 @@ class AgentUpdater():
         Uses a simple feedback model with given weight of new
         state vs old state.
 
+        prev_state: float
+            Value of stress in the previous timestep
+        dt: float
+            Time delta (amount of time to progress)
         params: dict
             Dictionary containing the required parameters
         """
@@ -165,6 +184,10 @@ class AgentUpdater():
         Evolution equation of external or internal escape
         strategy.
 
+        prev_state: float
+            Value of stress in the previous timestep
+        dt: float
+            Time delta (amount of time to progress)
         params: dict
             Dictionary containing the required parameters
         """
@@ -193,6 +216,10 @@ class AgentUpdater():
         """
         Evolution equation of social burden.
 
+        prev_state: float
+            Value of stress in the previous timestep
+        dt: float
+            Time delta (amount of time to progress)
         params: dict
             Dictionary containing the required parameters
         """
@@ -218,32 +245,3 @@ class AgentUpdater():
             new_state = 1
 
         return new_state
-
-
-    def rk4_step(self, prev_state, t, dt, f, params):
-        """
-        Runge-Kutta 4 implementation that estimates the solution of
-        a differential equation in time dt.
-
-        Parameters
-        ----------
-        prev_state: float
-            Previous value of the to-be-approximated parameter
-        t: float
-            Current time
-        dt: float
-            Timestep size
-        f: function
-            Evolution equation of the to-be-approximated parameter
-        """
-        k1 = f(prev_state, t, params)
-        k2 = f(prev_state + 0.5*dt*k1, t + 0.5*dt, params)
-        k3 = f(prev_state + 0.5*dt*k2, t + 0.5*dt, params)
-        k4 = f(prev_state + dt*k3, t + dt, params)
-        new_state = prev_state + dt * (k1 + 2*k2 + 2*k3 + k4) / 6
-        if new_state > 1:
-            return 2 - new_state
-        elif new_state < 0:
-            return 0 - new_state
-        else:
-            return new_state

@@ -1,4 +1,4 @@
-from model.parameters.DefaultParameters import DefaultParameters
+from model.dynamics.parameters.DefaultParameters import DefaultParameters
 
 class DefaultParameterFactory:
     def __init__(self):

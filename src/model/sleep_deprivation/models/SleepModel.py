@@ -1,6 +1,6 @@
 import mesa
-from model.agents.AgentFactory import AgentFactory
-from model.system_updates.state_registry import register_all_states
+from model.sleep_deprivation.agents.AgentFactory import AgentFactory
+from model.dynamics.state_registry import register_all_states
 import numpy as np
 import random
 
@@ -45,7 +45,7 @@ class SleepModel(mesa.Model):
         
         AgentFactory.create_agents(type="sleep", model=self, n=1, stress_gen=True, default_params=parameters)
         AgentFactory.create_agents(type="bad_sleep", model=self, n=1, stress_gen=True, default_params=parameters)
-        AgentFactory.create_agents(type="wang", model=self, n=1, stress_gen=True, default_params=parameters)
+        AgentFactory.create_agents(type="baseline", model=self, n=1, stress_gen=True, default_params=parameters)
 
     def step(self):
         """

@@ -1,6 +1,6 @@
 import mesa
-from model.agents.AgentFactory import AgentFactory
-from model.system_updates.state_registry import register_all_states
+from model.sleep_deprivation.agents.AgentFactory import AgentFactory
+from model.dynamics.state_registry import register_all_states
 import numpy as np
 import random
 import networkx as nx
@@ -51,7 +51,7 @@ class DefaultModel(mesa.Model):
         mean_degree = self.num_agents - 1
         self.assign_connections(k=mean_degree, seed=seed)
         self.agents.do(lambda agent: agent.extract_neighbors())
-        AgentFactory.create_agents(type="wang", model=self, n=1, stress_gen=True, default_params=parameters)
+        AgentFactory.create_agents(type="baseline", model=self, n=1, stress_gen=True, default_params=parameters)
 
     def assign_connections(self, k=4, p=0.01, seed=None):
         """

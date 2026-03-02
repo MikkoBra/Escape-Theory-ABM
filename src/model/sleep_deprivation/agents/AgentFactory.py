@@ -1,14 +1,14 @@
-from model.agents.StandardAgent import StandardAgent
-from model.agents.SleepAgent import SleepAgent
-from model.agents.BadSleepAgent import BadSleepAgent
-from model.agents.WangAgent import WangAgent
+from model.sleep_deprivation.agents.StandardAgent import StandardAgent
+from model.sleep_deprivation.agents.SleepAgent import SleepAgent
+from model.sleep_deprivation.agents.BadSleepAgent import BadSleepAgent
+from model.sleep_deprivation.agents.BaselineAgent import BaselineAgent
 
 
 TYPE_DICT = {
     "standard": StandardAgent,
     "sleep": SleepAgent,
     "bad_sleep": BadSleepAgent,
-    "wang": WangAgent,
+    "baseline": BaselineAgent,
 }
 
 class AgentFactory():

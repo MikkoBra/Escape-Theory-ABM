@@ -1,4 +1,4 @@
-from model.agents.SleepAgent import SleepAgent
+from model.sleep_deprivation.agents.SleepAgent import SleepAgent
 
 class BadSleepAgent(SleepAgent):
     """

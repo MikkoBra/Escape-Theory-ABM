@@ -1,13 +1,13 @@
-from model.parameters.AbstractParameters import Parameters
-from model.parameters.sets.StressParameterSet import StressParameterSet
-from model.parameters.sets.AversionParameterSet import AversionParameterSet
-from model.parameters.sets.UrgeToEscapeParameterSet import UrgeToEscapeParameterSet
-from model.parameters.sets.SuicidalParameterSet import SuicidalParameterSet
-from model.parameters.sets.EscapeBehaviorParameterSet import EscapeBehaviorParameterSet
-from model.parameters.sets.ExternalParameterSet import ExternalParameterSet
-from model.parameters.sets.InternalParameterSet import InternalParameterSet
-from model.parameters.sets.SuicideHistoryParameterSet import SuicideHistoryParameterSet
-from model.parameters.sets.BurdenParameterSet import BurdenParameterSet
+from model.dynamics.parameters.AbstractParameters import Parameters
+from model.dynamics.parameters.sets.StressParameterSet import StressParameterSet
+from model.dynamics.parameters.sets.AversionParameterSet import AversionParameterSet
+from model.dynamics.parameters.sets.UrgeToEscapeParameterSet import UrgeToEscapeParameterSet
+from model.dynamics.parameters.sets.SuicidalParameterSet import SuicidalParameterSet
+from model.dynamics.parameters.sets.EscapeBehaviorParameterSet import EscapeBehaviorParameterSet
+from model.dynamics.parameters.sets.ExternalParameterSet import ExternalParameterSet
+from model.dynamics.parameters.sets.InternalParameterSet import InternalParameterSet
+from model.dynamics.parameters.sets.SuicideHistoryParameterSet import SuicideHistoryParameterSet
+from model.dynamics.parameters.sets.BurdenParameterSet import BurdenParameterSet
 
 class DefaultParameters(Parameters):
     """
@@ -80,36 +80,37 @@ class DefaultParameters(Parameters):
     def set_defaults(self, S=True, A=True, U=True, M=True, T=True, X=True, E=True, I=True, B=True):
         # Stress
         if S:
-            self.set_default_stress_params()
+            self.set_default_stress_coefficients()
         # Aversive internal state
         if A:
-            self.set_default_aversion_params()
+            self.set_default_aversion_coefficients()
         # Urge to escape
         if U:
-            self.set_default_urge_to_escape_params()
+            self.set_default_urge_to_escape_coefficients()
         # Suicide history
         if M:
-            self.set_default_suicide_history_params()
+            self.set_default_suicide_history_coefficients()
         # Suicidal thought
         if T:
-            self.set_default_suicidal_thought_params()
+            self.set_default_suicidal_thought_coefficients()
         # Escape behavior
         if X:
-            self.set_default_escape_behavior_params()
+            self.set_default_escape_behavior_coefficients()
         # External strategy parameters
         if E:
-            self.set_default_external_strategy_params()
+            self.set_default_external_strategy_coefficients()
         # Internal strategy parameters
         if I:
-            self.set_default_internal_strategy_params()
+            self.set_default_internal_strategy_coefficients()
+        # Social burden parameters
         if B:
-            self.set_default_burdensomeness_params()
+            self.set_default_burdensomeness_coefficients()
 
     
-    def set_default_stress_params(
+    def set_default_stress_coefficients(
             self,
         ):
-        return super().set_stress_params(
+        return super().set_stress_coefficients(
             baseline=self.default_stress.baseline,
             decay=self.default_stress.decay,
             impulse_rate=self.default_stress.impulse_rate,
@@ -121,10 +122,10 @@ class DefaultParameters(Parameters):
             sigma=self.default_stress.sigma,
         )
     
-    def set_default_aversion_params(
+    def set_default_aversion_coefficients(
             self,
         ):
-        return super().set_aversion_params(
+        return super().set_aversion_coefficients(
             feedback=self.default_aversion.feedback,
             carrying_capacity=self.default_aversion.carrying_capacity,
             S_weight=self.default_aversion.S_weight,
@@ -134,51 +135,51 @@ class DefaultParameters(Parameters):
             B_weight=self.default_aversion.B_weight,
             c_weight=self.default_aversion.c_weight)
     
-    def set_default_urge_to_escape_params(self):
-        return super().set_urge_to_escape_params(
+    def set_default_urge_to_escape_coefficients(self):
+        return super().set_urge_to_escape_coefficients(
             feedback=self.default_urge_to_escape.feedback,
             A_weight=self.default_urge_to_escape.A_weight,
             M_weight=self.default_urge_to_escape.M_weight,
             C_weight=self.default_urge_to_escape.C_weight
         )
 
-    def set_default_suicide_history_params(self):
-        return super().set_suicide_history_params(
+    def set_default_suicide_history_coefficients(self):
+        return super().set_suicide_history_coefficients(
             decay=self.default_suicide_history.decay
         )
 
-    def set_default_suicidal_thought_params(self):
-        return super().set_suicidal_thought_params(
+    def set_default_suicidal_thought_coefficients(self):
+        return super().set_suicidal_thought_coefficients(
             feedback=self.default_suicidal_thought.feedback,
             sig_middle=self.default_suicidal_thought.sig_middle,
             sig_steepness=self.default_suicidal_thought.sig_steepness
         )
 
-    def set_default_escape_behavior_params(self):
-        return super().set_escape_behavior_params(
+    def set_default_escape_behavior_coefficients(self):
+        return super().set_escape_behavior_coefficients(
             feedback=self.default_escape_behavior.feedback,
             sig_middle=self.default_escape_behavior.sig_middle,
             sig_steepness=self.default_escape_behavior.sig_steepness
         )
 
-    def set_default_external_strategy_params(self):
-        return super().set_external_strategy_params(
+    def set_default_external_strategy_coefficients(self):
+        return super().set_external_strategy_coefficients(
             feedback=self.default_external_strategy.feedback,
             carrying_capacity=self.default_external_strategy.carrying_capacity,
             A_weight=self.default_external_strategy.A_weight,
             U_weight=self.default_external_strategy.U_weight
         )
 
-    def set_default_internal_strategy_params(self):
-        return super().set_internal_strategy_params(
+    def set_default_internal_strategy_coefficients(self):
+        return super().set_internal_strategy_coefficients(
             feedback=self.default_internal_strategy.feedback,
             carrying_capacity=self.default_internal_strategy.carrying_capacity,
             A_weight=self.default_internal_strategy.A_weight,
             U_weight=self.default_internal_strategy.U_weight
         )
 
-    def set_default_burdensomeness_params(self):
-        return super().set_burdensomeness_params(
+    def set_default_burdensomeness_coefficients(self):
+        return super().set_burdensomeness_coefficients(
             neighbors=self.default_burdensomeness.neighbors,
             neighbor_ws=self.default_burdensomeness.neighbor_ws,
             feedback=self.default_burdensomeness.feedback,

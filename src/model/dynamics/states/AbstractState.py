@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from model.parameters.AbstractParameters import Parameters
+from model.dynamics.parameters.AbstractParameters import Parameters
 
 class State(ABC):
     """

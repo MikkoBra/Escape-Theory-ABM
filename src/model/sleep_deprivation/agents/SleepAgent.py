@@ -1,11 +1,21 @@
-from model.agents.SleepAgent import SleepAgent
+from model.sleep_deprivation.agents.StandardAgent import StandardAgent
 from Constants import Constants
 
-class WangAgent(SleepAgent):
+class SleepAgent(StandardAgent):
 
-    def __init__(self, model, stress_gen=False, default_params={}):
-        super().__init__(model)
-        self.type = "wang"
+    def __init__(self, model, stress_gen=False, default_params={
+        "aversion": {
+            "B_weight": 0,
+            "c_weight": 0,
+        },
+        "urge_to_escape": {
+            "C_weight": 0,
+        }
+    }):
+        super().__init__(model, stress_gen=stress_gen, default_params=default_params)
+        self.type = "sleep"
+        self.state_params.consistent_sleep = 8
+        self.state_params.commute = 0.5 * Constants.DAY_LENGTH * (1/24)
 
 
     def update_agent(self, dt):
@@ -103,3 +113,7 @@ class WangAgent(SleepAgent):
         self.external_strat = new_E
         self.internal_strat = new_I
         self.total_time += dt
+
+        if self.state_manager.state.STATE_NAME == "morning":
+            self.parameters.set_stress_params(morning_impulse=0)
+        self.state_manager.update_state(dt, self.total_time, self.parameters)

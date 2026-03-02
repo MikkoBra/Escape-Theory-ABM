@@ -1,4 +1,4 @@
-from model.system_updates.state_registry import get_state
+from model.dynamics.state_registry import get_state
 
 
 class StateManager():

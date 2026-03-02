@@ -2,19 +2,20 @@ import mesa
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from model.system_updates.AgentUpdater import (
+from model.dynamics.AgentUpdater import (
     AgentUpdater
 )
-from model.parameters.DefaultParameterFactory import DefaultParameterFactory
-from model.parameters.StateParameters import StateParameters
-from model.system_updates.StateManager import StateManager
-from model.states.SleepState import SleepState
+from model.dynamics.parameters.DefaultParameterFactory import DefaultParameterFactory
+from model.dynamics.parameters.StateParameters import StateParameters
+from model.dynamics.states.SleepState import SleepState
+from model.dynamics.StateManager import StateManager
+
 SOCIAL_WEIGHT_IDX = 1
 
 
 class StandardAgent(mesa.Agent):
     """
-    Default agent in the suicide model.
+    Agent with all extended dynamics enabled.
     """
     time_values = None
     stress_values = None

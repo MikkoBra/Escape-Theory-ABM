@@ -1,38 +1,59 @@
 
-# Escape-Theory-ABM
+# ABM of Suicidality
 
-An Agent-Based Model (ABM) of a small community, simulating the onset of suicidal thoughts with state-based interactions.
+An Agent-Based Model (ABM) of suicidality. The core dynamics are based on Wang et al. and Engels.
+Agent types and model settings were defined for two types of analysis: the effects of sleep deprivation on suicidality,
+and social contagion through social media. The first was developed for a paper submitted to the International Conference
+of Computational Science 2026, the latter for my Master's thesis project at the University of Amsterdam.
 
 
 ## Modules
 ```
 src/
-├── errors/                        # Custom error classes
+├── errors/                                         # Custom error classes
 |
-├── model/
-│   ├── agents/                    # Contains agent classes with unique parameter settings
-|   |   ├── StandardAgent.py       # Default agent class with main agent action definitions
-|   |   └── VolatileAgent.py       # Agent class with higher volatility
+├── model/                                          # Module containing all model logic
+│   ├── dynamics/                                   # Defines the core dynamics of the models
+|   |   ├── parameters/                             # Contains everything related to parameter
+|   |   |   |                                         settings
+|   |   |   ├── sets/                               # Contains classes representing specific
+|   |   |   |                                         parameters and their coefficient settings
+|   |   |   ├── AbstractParameters.py               # Abstract class contining all parameters'
+|   |   |   |                                         Set classes
+|   |   |   ├── DefaultParameters.py                # Implementation of AbstractParameters
+|   |   |   |                                         defining default parameter values
+|   |   |   ├── DefaultParameterFactory.py          # Class that enables modification of
+|   |   |   |                                         specified default coefficient values
+|   |   |   └── StateParameters.py                  # Class containing state-related variables
+|   |   |                                             that need to be stored between states
+|   |   ├── states/                                 # Contains classes defining agent states
+|   |   ├── AgentUpdater.py                         # Contains all parameter update rules
+|   |   ├── state_registry.py                       # Initializes state objects before simulation
+|   |   └── StateManager.py                         # Handles switching between agent states
 |   |
-│   ├── parameters/
-|   |   ├── sets/                  # Record classes to contain parameters per update equation
-|   |   ├── Parameters.py          # Abstract parameters superclass with getters/setters for all
-|   |   |                            equation sets
-|   |   ├── DefaultParameters.py   # Extension of Parameters that initializes with default values
-|   |   |                            for all update equations
-|   |   ├── VolatileParameters.py  # Extension of DefaultParameters that sets higher stress sd,
-|   |   |                            and lower suicidal thought and escape behavior thresholds
-|   |   └── StateParameters.py     # Class containing parameters required for calculation of state
-|   |                                effects and duration
+|   ├── sleep_deprivation/                          # Contains agents and models specific to
+|   |   |                                             analysis of the effects of sleep
+|   |   |                                             deprivation on suicidality
+|   │   ├── agents/
+|   |   |   ├── AgentFactory.py                     # Interface for generating agents
+|   |   |   ├── StandardAgent.py                    # Agent with all model extensions
+|   |   |   ├── BaselineAgent.py                    # Agent with dynamics from Wang et al.
+|   |   |   ├── SleepAgent.py                       # Agent with consistent 8h sleep
+|   |   |   └── BadSleepAgent.py                    # Agent with consistent 6h sleep     
+|   │   └── models/
+|   |       ├── DefaultModel.py                     # Model with 15 StandardAgents and 1 Baseline
+|   |       └── SleepModel.py                       # Model with 1 SleepAgent and 1 BadSleepAgent
 |   |
-│   ├── system_updates/            # Location state representations, AgentUpdater with evolution
-|   |                                functions
-│   └── SuicideModel.py            # Model class that initializes the environment
+│   └── social_contagion/                           # Contains agents and models specific to
+|       |                                             analysis of the effects of social media
+|       |                                             on social contagion of suicidality
+|       ├── agents/                  
+|       └── models/
 |
-├── output/                        # Files containing output from runs
+├── output/                        # Files containing simulation output
 ├── Constants.py                   # Constants used in the model
-├── run_model.py                   # Runs the model with input for number of agents and length
-|                                    of simulation
+├── run_model.py                   # Runs the default sleep deprivation model based on input
+├── sleep_experiment.py            # Runs the SleepModel and generates results for analysis
 └── requirements.txt               # Python library requirements for this model
 .gitignore
 README.md
@@ -63,7 +84,6 @@ Run the model
   cd src
   python run_model.py
 ```
-If you want to generate a plot, make sure that the filename of the dataset is correct in run_model.py
 
 ## Authors
 

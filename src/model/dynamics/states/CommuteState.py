@@ -1,4 +1,4 @@
-from model.states.AbstractState import State
+from model.dynamics.states.AbstractState import State
 from errors.StateError import PreviousStateError, NextStateError
 from Constants import Constants
 import numpy as np

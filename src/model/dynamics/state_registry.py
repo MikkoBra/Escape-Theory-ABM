@@ -1,8 +1,8 @@
-from model.states.SleepState import SleepState
-from model.states.MorningState import MorningState
-from model.states.CommuteState import CommuteState
-from model.states.WorkState import WorkState
-from model.states.HomeState import HomeState
+from model.dynamics.states.SleepState import SleepState
+from model.dynamics.states.MorningState import MorningState
+from model.dynamics.states.CommuteState import CommuteState
+from model.dynamics.states.WorkState import WorkState
+from model.dynamics.states.HomeState import HomeState
 
 STATE_REGISTRY = {}
 
