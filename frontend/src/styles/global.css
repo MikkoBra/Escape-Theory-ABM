@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;500&family=Source+Code+Pro:wght@400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+  --bg:         #fafaf8;
+  --bg-subtle:  #f3f2ef;
+  --border:     #d8d5ce;
+  --border-mid: #c4c0b8;
+  --text:       #1a1916;
+  --text-mid:   #4a4740;
+  --text-muted: #8a8780;
+  --accent:     #2a5c8a;
+  --accent-mid: #3d7ab5;
+  --accent-bg:  #edf3f9;
+  --danger:     #8a2a2a;
+  --danger-bg:  #f9eded;
+  --mono:       'Source Code Pro', monospace;
+  --sans:       'Source Sans 3', sans-serif;
+  --serif:      'Source Serif 4', serif;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}

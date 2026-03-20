@@ -5,3 +5,39 @@ class Constants:
     WAKE_TIME = 7/24
     WORK_TIME = 9/24
     HEALTHY_SLEEP = 8/24
+
+    L_S_INDEX = 0
+    lambda_S_INDEX = 1
+    r_P_INDEX = 2
+    alpha_P_INDEX = 3
+    P_m_INDEX = 4
+    f1_1_INDEX = 5
+    f1_2_INDEX = 6
+    f1_3_INDEX = 7
+    sigma_INDEX = 8
+
+# Time-related constants
+DAY_LENGTH = 1
+MINUTE_LENGTH = DAY_LENGTH/24/60
+WORKDAY_LENGTH = 8/24
+WAKE_TIME = 7/24
+WORK_TIME = 9/24
+HEALTHY_SLEEP = 8/24
+
+# State-related constants
+SLEEP_MEAN_INDEX = 0
+SLEEP_SD_INDEX = 1
+COMMUTE_MEAN_INDEX = 2
+COMMUTE_SD_INDEX = 3
+CONSISTENT_SLEEP_INDEX = 4
+
+# Stress-related constants
+L_S_INDEX = 0
+lambda_S_INDEX = 1
+r_P_INDEX = 2
+alpha_P_INDEX = 3
+P_m_INDEX = 4
+f1_1_INDEX = 5
+f1_2_INDEX = 6
+f1_3_INDEX = 7
+sigma_INDEX = 8

@@ -1,0 +1,27 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./src:/app/src       # python changes reload instantly
+      - ./api:/app/api
+    environment:
+      - FLASK_ENV=development
+      - PYTHONUNBUFFERED=1
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src         # react changes reload instantly
+      - ./frontend/public:/app/public
+    environment:
+      - CHOKIDAR_USEPOLLING=true        # needed for file watching inside Docker
+    depends_on:
+      - api

@@ -5,7 +5,7 @@ from itertools import islice
 from scipy.stats import ttest_ind, mannwhitneyu
 import matplotlib.pyplot as plt
 
-from model.sleep_deprivation.models.SleepModel import SleepModel
+from iccs_model.sleep_deprivation.models.SleepModel import SleepModel
 
 N_RUNS = 1000
 DT = 0.1

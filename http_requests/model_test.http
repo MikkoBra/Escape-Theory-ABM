@@ -1,0 +1,11 @@
+### Initialize model
+POST http://localhost:5000/api/model/initialize
+Content-Type: application/json
+
+{"n_agents": 15, "end_time": 1}
+
+### Step
+POST http://localhost:5000/api/model/step
+
+### Get state
+POST http://localhost:5000/api/model/run
