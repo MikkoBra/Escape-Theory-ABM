@@ -7,6 +7,10 @@ and social contagion through social media. The first was developed for a paper s
 of Computational Science 2026, the latter for my Master's thesis project at the University of Amsterdam.
 
 
+Extensions are currently in development. For the code used to write the paper submitted to ICCS 2026,
+you may use the scripts contained in src. The model itself is contained in src/iccs_model.
+
+
 ## Modules
 ```
 src/
