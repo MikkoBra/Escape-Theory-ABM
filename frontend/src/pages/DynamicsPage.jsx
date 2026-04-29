@@ -11,14 +11,18 @@ export default function DynamicsPage() {
   const [endTime, setEndTime] = useState("");
   const [status, setStatus]   = useState("idle");
   const [stressData, setStressData] = useState(null);
+  const [aversiveData, setAversiveData] = useState(null);
   const [agentIdx, setAgentIdx]     = useState(0);
   const [error, setError]           = useState(null);
 
   const nAgentsResolved = stressData?.[0]?.length ?? null;
   const dtResolved      = dt ? parseFloat(dt) : 1/24/60;
 
-  const agentSeries = stressData
+  const stressSeries = stressData
     ? stressData.map(row => row[Math.min(agentIdx, row.length - 1)] ?? 0)
+    : [];
+  const aversiveSeries = aversiveData
+    ? aversiveData.map(row => row[Math.min(agentIdx, row.length - 1)] ?? 0)
     : [];
 
   async function handleRun() {
@@ -33,6 +37,7 @@ export default function DynamicsPage() {
       });
       const res = await runModel();
       setStressData(res.stress);
+      setAversiveData(res.aversive_state);
       setStatus("done");
     } catch (e) {
       setError(e?.error ?? "An error occurred.");
@@ -47,7 +52,7 @@ export default function DynamicsPage() {
       <div className="sidebar">
         <div className="sidebar-title">
           <span>Escape Theory Agent Model</span>
-          Stress Dynamics
+          Agent Dynamics
         </div>
 
         <div className="sidebar-section">
@@ -102,7 +107,7 @@ export default function DynamicsPage() {
           <div className="chart-header">
             <p className="chart-title">
               {status === "done"
-                ? `Fig. 1. Stress trajectory, agent ${agentIdx} of ${nAgentsResolved} — dt = ${dtResolved.toFixed(5)}`
+                ? `Fig. 1. Parameter trajectories, agent ${agentIdx} of ${nAgentsResolved} — dt = ${dtResolved.toFixed(5)}`
                 : status === "running"
                 ? "Running simulation…"
                 : "Simulation error"}
@@ -122,7 +127,13 @@ export default function DynamicsPage() {
             <div className="placeholder-text error-text">{error}</div>
           )}
           {status === "done" && stressData && (
-            <DynamicsChart data={agentSeries} dt={dtResolved} />
+            <DynamicsChart
+              dt={dtResolved}
+              series={[
+                { name: "S(t)", data: stressSeries, color: "#2a5c8a" },
+                { name: "A(t)", data: aversiveSeries, color: "#c94f4f" },
+              ]}
+            />
           )}
         </div>
       </div>

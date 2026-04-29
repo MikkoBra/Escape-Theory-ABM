@@ -1,7 +1,10 @@
-from iccs_model.sleep_deprivation.agents.StandardAgent import StandardAgent
-from Constants import Constants
+from iccs_model.sleep_deprivation.agents.SleepAgent import SleepAgent
 
-class SleepAgent(StandardAgent):
+class SuicideHistoryAgent(SleepAgent):
+    """
+    Agent type used to analyze the effects of poor sleep on the agent's
+    suicidal thoughts, as well as its social network.
+    """
 
     def __init__(self, model, stress_gen=False, default_params={
         "aversion": {
@@ -10,13 +13,11 @@ class SleepAgent(StandardAgent):
         },
         "urge_to_escape": {
             "C_weight": 0,
+            "M_weight": 100,
         }
-    }):
-        super().__init__(model, stress_gen=stress_gen, default_params=default_params)
-        self.type = "sleep"
-        self.state_params.consistent_sleep = 8
-        self.state_params.commute = 0.5 * Constants.DAY_LENGTH * (1/24)
-
+        }):
+        super().__init__(model=model, default_params=default_params)
+        self.type = "suicide_history"
 
     def update_agent(self, dt):
         """
@@ -59,14 +60,14 @@ class SleepAgent(StandardAgent):
         )
 
         # Update suicide history
-        # params = self.parameters.get_M_params(
-        #     suicidal_thought=self.suicidal_thought
-        # )
-        # new_M = self.updater.suicide_history(
-        #     prev_state=self.suicide_history,
-        #     dt=dt,
-        #     params=params
-        # )
+        params = self.parameters.get_M_params(
+            suicidal_thought=self.suicidal_thought
+        )
+        new_M = self.updater.suicide_history(
+            prev_state=self.suicide_history,
+            dt=dt,
+            params=params
+        )
 
         # Update suicidal thought
         params = self.parameters.get_T_params(
@@ -107,13 +108,9 @@ class SleepAgent(StandardAgent):
         self.stress = new_S
         self.aversive_internal_state = new_A
         self.urge_to_escape = new_U
-        # self.suicide_history = new_M
+        self.suicide_history = new_M
         self.suicidal_thought = new_T
         self.escape_behavior = new_X
         self.external_strat = new_E
         self.internal_strat = new_I
         self.total_time += dt
-
-        if self.state_manager.state.STATE_NAME == "morning":
-            self.parameters.set_stress_coefficients(morning_impulse=0)
-        self.state_manager.update_state(dt, self.total_time, self.parameters)

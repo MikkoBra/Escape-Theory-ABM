@@ -2,8 +2,8 @@ import mesa
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from iccs_model.dynamics.AgentUpdater import (
-    AgentUpdater
+from iccs_model.dynamics.AgentUpdaterNumba import (
+    NumbaAgentUpdater
 )
 from iccs_model.dynamics.parameters.DefaultParameterFactory import DefaultParameterFactory
 from iccs_model.dynamics.parameters.StateParameters import StateParameters
@@ -20,17 +20,14 @@ class StandardAgent(mesa.Agent):
     time_values = None
     stress_values = None
 
-    def __init__(self, model, stress_gen=False, default_params={}, state_params={}):
+    def __init__(self, model, default_params={}, state_params={}):
         """
         Initializes the agent with a default stress value.
         """
         super().__init__(model)
         self.type = "standard"
-        self.updater = AgentUpdater()
+        self.updater = NumbaAgentUpdater()
         self.parameters = DefaultParameterFactory().create_default_parameters(parameters=default_params)
-        self.stress_gen = stress_gen
-        if stress_gen:
-            self.parameters.set_stress_coefficients(impulse_rate=0)
 
         # Initialize state-specific values
         self.state_params = StateParameters(state_params)
@@ -44,6 +41,14 @@ class StandardAgent(mesa.Agent):
         self.medium_connections = 35
         self.clustering_coefficient = 0
         self.temperature = 0.5
+        self.network_id = self.unique_id - 1
+
+        # News-related attributes
+        self.age = 18
+        self.celebrity_agreement = np.random.uniform(0, 1)
+        self.vulnerability = 0
+        self.opinion_scalar = np.random.uniform(0, 1)
+
         self.stress = 0
         self.aversive_internal_state = 0
         self.urge_to_escape = 0
@@ -56,38 +61,22 @@ class StandardAgent(mesa.Agent):
         self.total_time = 0
         self.state_manager.state = SleepState()
         self.state_manager.state.generate_time(0, None, self.state_params)
-    
-
-    def init_stress():
-        data_folder = Path("output")
-        filename = "standard_stress.csv"
-        stress_df = pd.read_csv(data_folder / filename, usecols=["Stress", "Time"])
-
-        StandardAgent.stress_values = stress_df["Stress"].to_numpy()
 
 
-    def extract_neighbors(self):
-        neighbors = list(self.model.network.neighbors(self.network_id))
-        weights = [self.model.network.edges[self.network_id, neighbor]["strength"] \
-                   for neighbor in neighbors]
-        agent_neighbors = [self.model.agents[i] for i in neighbors]
-        self.parameters.set_burdensomeness_coefficients(neighbors=agent_neighbors, neighbor_ws=weights)
-        self.compute_connectedness(weights=weights)
-    
-
-    def compute_connectedness(self, weights):
-        if len(weights) < 0:
-            self.connectedness = 0
+    def set_connectedness(self, weights):
+        if len(weights) == 0:
+            self.connectedness = 0.0
             return
-        
-        weights = np.array(weights)
-        softmax_dist = np.exp(weights / self.temperature)
-        softmax_dist /= weights.sum()
 
-        entropy = -np.sum(weights * np.log(weights + 1e-8))
-        max_entropy = np.log(len(weights))
-        normalized_entropy = entropy / max_entropy
-        self.connectedness = 1 - normalized_entropy
+        weights = np.asarray(weights, dtype=np.float32)
+
+        # Proper probability distribution
+        p = weights / weights.sum()
+
+        entropy = -np.sum(p * np.log(p + 1e-8))
+        max_entropy = np.log(len(p))
+
+        self.connectedness = 1.0 - (entropy / max_entropy)
 
     
     def update_agent(self, dt):
@@ -95,15 +84,14 @@ class StandardAgent(mesa.Agent):
         Updates the agent over timestep dt.
         """
 
-        if self.stress_gen:
-            params = self.parameters.get_S_params(
-                external_strat=self.external_strat
-            )
-            new_S = self.updater.stress(
-                prev_state=self.stress,
-                dt=dt,
-                params=params
-            )
+        params = self.parameters.get_S_params(
+            external_strat=self.external_strat
+        )
+        new_S = self.updater.stress(
+            prev_state=self.stress,
+            dt=dt,
+            params=params
+        )
 
         # Update aversive internal state
         params = self.parameters.get_A_params(
@@ -178,8 +166,11 @@ class StandardAgent(mesa.Agent):
             params=params
         )
         
+        t = int(self.model.time / self.model.dt) - 1
         params = self.parameters.get_B_params(
-            self.internal_strat
+            self.internal_strat,
+            self.model,
+            t
         )
         new_B = self.updater.burdensomeness(
             prev_state=self.burdensomeness,
@@ -187,8 +178,7 @@ class StandardAgent(mesa.Agent):
             params=params
         )
         
-        if self.stress_gen:
-            self.stress = new_S
+        self.stress = new_S
         self.aversive_internal_state = new_A
         self.urge_to_escape = new_U
         self.suicide_history = new_M
@@ -198,11 +188,6 @@ class StandardAgent(mesa.Agent):
         self.internal_strat = new_I
         self.burdensomeness = new_B
         self.total_time += dt
-
-        if not self.stress_gen:
-            values = StandardAgent.stress_values
-            idx = int(self.total_time/dt)
-            self.stress = values[idx]
 
         if self.state_manager.state.STATE_NAME == "morning":
             self.parameters.set_stress_coefficients(morning_impulse=0)

@@ -92,7 +92,7 @@ class AgentUpdater():
         elif new_state > 1:
             new_state = 1
         return new_state
-    
+        
     def suicide_history(self, prev_state, dt, params):
         try:
             T = params["T"]

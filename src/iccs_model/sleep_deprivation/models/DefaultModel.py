@@ -11,7 +11,7 @@ class DefaultModel(mesa.Model):
     """
     Agent-based model of suicidality in a small world network.
     """
-    def __init__(self, dt, n=15, seed=None, parameters={}, verbose=False, collect_all=False, warmup=20):
+    def __init__(self, dt, n=15, seed=None, parameters={}, verbose=False, collect_all=False, warmup=20, agent_type="standard"):
         super().__init__(seed=seed)
         if seed is not None:
             random.seed(seed)
@@ -47,11 +47,11 @@ class DefaultModel(mesa.Model):
             )
         register_all_states()
         
-        AgentFactory.create_agents(type="standard", model=self, n=n, stress_gen=True, default_params=parameters)
-        mean_degree = self.num_agents - 1
-        self.assign_connections(k=mean_degree, seed=seed)
-        self.agents.do(lambda agent: agent.extract_neighbors())
-        AgentFactory.create_agents(type="baseline", model=self, n=1, stress_gen=True, default_params=parameters)
+        AgentFactory.create_agents(type=agent_type, model=self, n=n, stress_gen=True, default_params=parameters)
+        if agent_type == "standard":
+            mean_degree = self.num_agents - 1
+            self.assign_connections(k=mean_degree, seed=seed)
+            self.agents.do(lambda agent: agent.extract_neighbors())
 
     def assign_connections(self, k=4, p=0.01, seed=None):
         """

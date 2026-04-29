@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from network_abm.models.EscapeModel import EscapeModel
+from iccs_model.networked_agents.models.NetworkedModel import NetworkedModelNumba
 from Constants import MINUTE_LENGTH
 
 model_bp = Blueprint("model", __name__)
@@ -8,44 +8,44 @@ _model_instance = None
 
 @model_bp.route("/initialize", methods=["POST"])
 def initialize():
+    """Run a basic simulation with the optimized model."""
     global _model_instance
 
     data = request.get_json() or {}
     N  = data.get("n_agents", 15)
     dt = data.get("dt", MINUTE_LENGTH)
     end_time = data.get("end_time", 10)
-
-    _model_instance = EscapeModel(dt=dt, end_time=end_time, n_agents=N,)
+    
+    # Define parameters
+    parameters = {
+        'num_steps': int(end_time/dt),
+    }
+    
+    # Create model
+    print("Creating model...")
+    _model_instance = NetworkedModelNumba(
+        dt=MINUTE_LENGTH,
+        seed=42,
+        parameters=parameters,
+        verbose=True
+    )
 
     return jsonify({
         "status": "ok",
     }), 201
-
-@model_bp.route("/step", methods=["POST"])
-def step():
     
-    global _model_instance
-    if _model_instance is None:
-        return jsonify({"error": "model not initialized"}), 400
-
-    _model_instance.debug = True
-    _model_instance.step()
-    _model_instance.debug = False
-
-    return jsonify({
-        "status": "ok",
-        "t": _model_instance.time,
-    }), 200
 
 @model_bp.route("/run", methods=["POST"])
 def run_model():
     if _model_instance is None:
         return jsonify({"error": "model not initialized"}), 400
     
-    while _model_instance.steps < _model_instance.end_steps:
+    while int(_model_instance.time / _model_instance.dt) < _model_instance.num_steps:
         _model_instance.step()
     
-    stress = _model_instance.datacollector["Stress"].tolist()
+    stress = _model_instance.data["stress"].tolist()
+    aversive_state = _model_instance.data["aversive_internal_state"].tolist()
     return jsonify({
         "stress": stress,
+        "aversive_state": aversive_state,
     }), 200

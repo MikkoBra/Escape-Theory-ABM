@@ -36,16 +36,16 @@ class HomeState(State):
     
     def modify_parameters(self, params):
         # Reset from last state
-        params.set_default_stress_params()
-        params.set_default_escape_behavior_params()
+        params.set_default_stress_coefficients()
+        params.set_default_escape_behavior_coefficients()
 
         # Escape behavior is easier
         new_middle = max(params.escape_behavior.sig_middle - 0.02, 0)
-        params.set_escape_behavior_params(sig_middle=new_middle)
+        params.set_escape_behavior_coefficients(sig_middle=new_middle)
 
         # Suicidal thought decays less quickly
         updated_weight = max(params.suicidal_thought.feedback - 0.1, 0)
-        params.set_suicidal_thought_params(feedback=updated_weight)
+        params.set_suicidal_thought_coefficients(feedback=updated_weight)
     
     def to_string(self):
         return self.STATE_NAME

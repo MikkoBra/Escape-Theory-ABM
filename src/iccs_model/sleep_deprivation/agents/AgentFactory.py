@@ -2,6 +2,7 @@ from iccs_model.sleep_deprivation.agents.StandardAgent import StandardAgent
 from iccs_model.sleep_deprivation.agents.SleepAgent import SleepAgent
 from iccs_model.sleep_deprivation.agents.BadSleepAgent import BadSleepAgent
 from iccs_model.sleep_deprivation.agents.BaselineAgent import BaselineAgent
+from iccs_model.sleep_deprivation.agents.SuicideHistoryAgent import SuicideHistoryAgent
 
 
 TYPE_DICT = {
@@ -9,6 +10,7 @@ TYPE_DICT = {
     "sleep": SleepAgent,
     "bad_sleep": BadSleepAgent,
     "baseline": BaselineAgent,
+    "suicide_history": SuicideHistoryAgent,
 }
 
 class AgentFactory():

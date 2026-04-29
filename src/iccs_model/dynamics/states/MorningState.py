@@ -34,9 +34,9 @@ class MorningState(State):
         # based on shortage of sleep
         sleep_deficit = max(0.0, (Constants.HEALTHY_SLEEP - self.sleep) / Constants.HEALTHY_SLEEP)
         morning_impulse = params.stress.impulse_strength * (1 + np.exp(sleep_deficit/Constants.HEALTHY_SLEEP))
-        params.set_stress_params(morning_impulse=morning_impulse, impulse_rate=0)
+        params.set_stress_coefficients(morning_impulse=morning_impulse, impulse_rate=0)
         new_T_threshold = params.suicidal_thought.sig_middle - 0.1 * sleep_deficit/Constants.HEALTHY_SLEEP
-        params.set_suicidal_thought_params(sig_middle=new_T_threshold)
+        params.set_suicidal_thought_coefficients(sig_middle=new_T_threshold)
 
     
     def to_string(self):

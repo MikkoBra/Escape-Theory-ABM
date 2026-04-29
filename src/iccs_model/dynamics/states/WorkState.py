@@ -25,14 +25,14 @@ class WorkState(State):
     
     def modify_parameters(self, params):
         # Reset from last state
-        params.set_default_stress_params()
-        params.set_default_escape_behavior_params()
+        params.set_default_stress_coefficients()
+        params.set_default_escape_behavior_coefficients()
 
         # # Increase urge to escape feedback
         new_escape_weight_E = params.external_strategy.U_weight + 0.3
-        params.set_external_strategy_params(U_weight=new_escape_weight_E)
+        params.set_external_strategy_coefficients(U_weight=new_escape_weight_E)
         new_escape_weight_I = params.internal_strategy.U_weight + 0.3
-        params.set_internal_strategy_params(U_weight=new_escape_weight_I)
+        params.set_internal_strategy_coefficients(U_weight=new_escape_weight_I)
     
     def to_string(self):
         return self.STATE_NAME

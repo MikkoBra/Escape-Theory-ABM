@@ -52,14 +52,14 @@ class BaselineAgent(SleepAgent):
         )
 
         # Update suicide history
-        params = self.parameters.get_M_params(
-            suicidal_thought=self.suicidal_thought
-        )
-        new_M = self.updater.suicide_history(
-            prev_state=self.suicide_history,
-            dt=dt,
-            params=params
-        )
+        # params = self.parameters.get_M_params(
+        #     suicidal_thought=self.suicidal_thought
+        # )
+        # new_M = self.updater.suicide_history(
+        #     prev_state=self.suicide_history,
+        #     dt=dt,
+        #     params=params
+        # )
 
         # Update suicidal thought
         params = self.parameters.get_T_params(
@@ -100,7 +100,7 @@ class BaselineAgent(SleepAgent):
         self.stress = new_S
         self.aversive_internal_state = new_A
         self.urge_to_escape = new_U
-        self.suicide_history = new_M
+        # self.suicide_history = new_M
         self.suicidal_thought = new_T
         self.escape_behavior = new_X
         self.external_strat = new_E

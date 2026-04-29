@@ -2,40 +2,56 @@ import { useEffect, useRef, useCallback } from "react";
 
 const FONT_SM   = "11px 'Source Code Pro', monospace";
 const FONT_XS   = "10px 'Source Sans 3', sans-serif";
-const LINE_COL  = "#2a5c8a";
 const GRID_COL  = "rgba(0,0,0,0.07)";
 const AXIS_COL  = "rgba(0,0,0,0.35)";
 const LABEL_COL = "rgba(0,0,0,0.45)";
 
-export default function DynamicsChart({ data, dt = 1/24/60 }) {
-  const canvasRef = useRef(null);
-  const overlayRef = useRef(null);
+export default function DynamicsChart({ series = [], dt = 1/24/60 }) {
+  const canvasRef    = useRef(null);
+  const crosshairRef = useRef(null);
+  const overlayRef   = useRef(null);
 
   const pad = { top: 20, right: 28, bottom: 52, left: 58 };
 
-  const drawChart = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || data.length < 2) return;
+  // Read logical size from the *parent* before touching canvas dimensions,
+  // so the canvas never influences its own measurement.
+  function getContainerSize(canvas) {
+    const parent = canvas.parentElement;
+    return { w: parent.clientWidth, h: parent.clientHeight };
+  }
 
-    canvas.width  = canvas.offsetWidth  * window.devicePixelRatio;
-    canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+  const drawChart = useCallback(() => {
+    const canvas    = canvasRef.current;
+    const crosshair = crosshairRef.current;
+    if (!canvas || series.length === 0) return;
+
+    const length = series[0].data.length;
+    if (length < 2) return;
+
+    const dpr      = window.devicePixelRatio || 1;
+    const { w, h } = getContainerSize(canvas);
+
+    // Size both canvases together, once, here — never in mouse handlers
+    [canvas, crosshair].forEach(c => {
+      if (!c) return;
+      c.width  = w * dpr;
+      c.height = h * dpr;
+      c.style.width  = w + "px";
+      c.style.height = h + "px";
+    });
 
     const ctx = canvas.getContext("2d");
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-
-    const w = canvas.offsetWidth;
-    const h = canvas.offsetHeight;
+    ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, w, h);
 
     const chartW = w - pad.left - pad.right;
     const chartH = h - pad.top  - pad.bottom;
 
-    // ── grid + y labels ───────────────────────────────────────
+    // ── grid ─────────────────────────────────────────────
     const yTicks = [0, 0.25, 0.5, 0.75, 1.0];
     yTicks.forEach(val => {
       const y = pad.top + (1 - val) * chartH;
       ctx.strokeStyle = GRID_COL;
-      ctx.lineWidth   = 1;
       ctx.setLineDash([3, 4]);
       ctx.beginPath();
       ctx.moveTo(pad.left, y);
@@ -43,76 +59,82 @@ export default function DynamicsChart({ data, dt = 1/24/60 }) {
       ctx.stroke();
       ctx.setLineDash([]);
 
-      ctx.fillStyle    = LABEL_COL;
-      ctx.font         = FONT_SM;
-      ctx.textAlign    = "right";
+      ctx.fillStyle = LABEL_COL;
+      ctx.font = FONT_SM;
+      ctx.textAlign = "right";
       ctx.textBaseline = "middle";
       ctx.fillText(val.toFixed(2), pad.left - 8, y);
     });
 
-    // ── x labels ──────────────────────────────────────────────
-    ctx.textAlign    = "center";
+    // ── x-axis ───────────────────────────────────────────
+    ctx.textAlign = "center";
     ctx.textBaseline = "top";
+
     const nX = 6;
     for (let i = 0; i <= nX; i++) {
-      const idx  = Math.round((data.length - 1) * (i / nX));
+      const idx  = Math.round((length - 1) * (i / nX));
       const days = (idx * dt).toFixed(2);
-      const x    = pad.left + (idx / (data.length - 1)) * chartW;
+      const x    = pad.left + (idx / (length - 1)) * chartW;
+
       ctx.strokeStyle = AXIS_COL;
-      ctx.lineWidth   = 1;
       ctx.beginPath();
       ctx.moveTo(x, pad.top + chartH);
       ctx.lineTo(x, pad.top + chartH + 4);
       ctx.stroke();
+
       ctx.fillStyle = LABEL_COL;
-      ctx.font      = FONT_SM;
+      ctx.font = FONT_SM;
       ctx.fillText(days, x, pad.top + chartH + 7);
     }
 
-    // ── axis lines ────────────────────────────────────────────
+    // ── axes ─────────────────────────────────────────────
     ctx.strokeStyle = AXIS_COL;
-    ctx.lineWidth   = 1.5;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(pad.left, pad.top);
     ctx.lineTo(pad.left, pad.top + chartH);
     ctx.lineTo(pad.left + chartW, pad.top + chartH);
     ctx.stroke();
 
-    // ── axis labels ───────────────────────────────────────────
-    ctx.fillStyle    = LABEL_COL;
-    ctx.font         = FONT_XS;
-    ctx.textAlign    = "center";
+    // ── labels ───────────────────────────────────────────
+    ctx.fillStyle = LABEL_COL;
+    ctx.font = FONT_XS;
+    ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
     ctx.fillText("Time (days)", pad.left + chartW / 2, h - 2);
 
-    ctx.save();
-    ctx.translate(13, pad.top + chartH / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.textBaseline = "top";
-    ctx.fillText("Stress  S(t)", 0, 0);
-    ctx.restore();
-
-    // ── line ──────────────────────────────────────────────────
-    ctx.beginPath();
-    data.forEach((val, i) => {
-      const x = pad.left + (i / (data.length - 1)) * chartW;
-      const y = pad.top  + (1 - val) * chartH;
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    // ── draw all series ──────────────────────────────────
+    series.forEach(s => {
+      ctx.beginPath();
+      s.data.forEach((val, i) => {
+        const x = pad.left + (i / (length - 1)) * chartW;
+        const y = pad.top  + (1 - val) * chartH;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
     });
-    ctx.strokeStyle = LINE_COL;
-    ctx.lineWidth   = 1.5;
-    ctx.lineJoin    = "round";
-    ctx.stroke();
 
-  }, [data, dt]);
+  }, [series, dt]);
 
-  useEffect(() => { drawChart(); }, [drawChart]);
+  useEffect(() => {
+    drawChart();
+    const ro = new ResizeObserver(() => drawChart());
+    const parent = canvasRef.current?.parentElement;
+    if (parent) ro.observe(parent);
+    return () => ro.disconnect();
+  }, [drawChart]);
 
-  // ── hover handler ─────────────────────────────────────────────
+  // ── hover ─────────────────────────────────────────────
   function handleMouseMove(e) {
-    const canvas  = canvasRef.current;
-    const overlay = overlayRef.current;
-    if (!canvas || !overlay || data.length < 2) return;
+    const canvas    = canvasRef.current;
+    const crosshair = crosshairRef.current;
+    const overlay   = overlayRef.current;
+    if (!canvas || !crosshair || !overlay || series.length === 0) return;
+
+    const length = series[0].data.length;
+    if (length < 2) return;
 
     const rect   = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
@@ -123,85 +145,90 @@ export default function DynamicsChart({ data, dt = 1/24/60 }) {
     const chartW = w - pad.left - pad.right;
     const chartH = h - pad.top  - pad.bottom;
 
-    // outside chart area
     if (
       mouseX < pad.left || mouseX > pad.left + chartW ||
       mouseY < pad.top  || mouseY > pad.top  + chartH
     ) {
       overlay.style.display = "none";
+      const octx = crosshair.getContext("2d");
+      octx.clearRect(0, 0, crosshair.width, crosshair.height);
       return;
     }
 
-    const frac  = (mouseX - pad.left) / chartW;
-    const idx   = Math.round(frac * (data.length - 1));
-    const val   = data[Math.max(0, Math.min(idx, data.length - 1))];
-    const days  = (idx * dt).toFixed(3);
+    const frac = (mouseX - pad.left) / chartW;
+    const idx  = Math.round(frac * (length - 1));
+    const days = (idx * dt).toFixed(3);
 
-    // position overlay — flip left if near right edge
-    const BOX_W = 130;
-    const left  = mouseX + 12 + BOX_W > w ? mouseX - BOX_W - 12 : mouseX + 12;
-    const top   = Math.max(pad.top, mouseY - 20);
+    const ROW = `style="display:flex;justify-content:space-between;gap:16px;"`;
+    const SEC = `style="color:rgba(0,0,0,0.45);"`;
+    let html = `
+      <div ${ROW}><span ${SEC}>Step</span><span>${idx}</span></div>
+      <div ${ROW}><span ${SEC}>Time</span><span>${days} d</span></div>
+    `;
+    series.forEach(s => {
+      const val = s.data[idx] ?? 0;
+      html += `
+        <div ${ROW}>
+          <span ${SEC}>${s.name}</span>
+          <span style="color:${s.color}">${val.toFixed(4)}</span>
+        </div>
+      `;
+    });
 
     overlay.style.display = "block";
-    overlay.style.left    = left + "px";
-    overlay.style.top     = top  + "px";
-    overlay.innerHTML     = `
-      <div class="hover-row"><span>Step</span><span>${idx}</span></div>
-      <div class="hover-row"><span>Time</span><span>${days} d</span></div>
-      <div class="hover-row accent"><span>S(t)</span><span>${val.toFixed(4)}</span></div>
-    `;
+    overlay.style.left    = (mouseX + 12) + "px";
+    overlay.style.top     = (mouseY - 20) + "px";
+    overlay.innerHTML     = html;
 
-    // crosshair on overlay canvas
-    const oc  = overlayRef.current.parentElement.querySelector(".chart-crosshair");
-    if (!oc) return;
-    oc.width  = canvas.width;
-    oc.height = canvas.height;
-    const octx = oc.getContext("2d");
-    octx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    // crosshair — canvas is already sized; just clear + redraw
+    const dpr  = window.devicePixelRatio || 1;
+    const octx = crosshair.getContext("2d");
+    octx.setTransform(dpr, 0, 0, dpr, 0, 0);
     octx.clearRect(0, 0, w, h);
 
-    const cx = pad.left + (idx / (data.length - 1)) * chartW;
-    const cy = pad.top  + (1 - val) * chartH;
+    const cx = pad.left + (idx / (length - 1)) * chartW;
 
-    octx.strokeStyle = "rgba(42,92,138,0.3)";
-    octx.lineWidth   = 1;
     octx.setLineDash([3, 3]);
     octx.beginPath();
     octx.moveTo(cx, pad.top);
     octx.lineTo(cx, pad.top + chartH);
-    octx.stroke();
-    octx.beginPath();
-    octx.moveTo(pad.left, cy);
-    octx.lineTo(pad.left + chartW, cy);
+    octx.strokeStyle = "rgba(0,0,0,0.2)";
+    octx.lineWidth   = 1;
     octx.stroke();
     octx.setLineDash([]);
 
-    octx.beginPath();
-    octx.arc(cx, cy, 4, 0, Math.PI * 2);
-    octx.fillStyle   = LINE_COL;
-    octx.fill();
-    octx.strokeStyle = "#fff";
-    octx.lineWidth   = 1.5;
-    octx.stroke();
+    series.forEach(s => {
+      const val = s.data[idx] ?? 0;
+      const cy  = pad.top + (1 - val) * chartH;
+      octx.beginPath();
+      octx.arc(cx, cy, 4, 0, Math.PI * 2);
+      octx.fillStyle = s.color;
+      octx.fill();
+    });
   }
 
   function handleMouseLeave() {
-    const overlay = overlayRef.current;
+    const overlay   = overlayRef.current;
+    const crosshair = crosshairRef.current;
     if (overlay) overlay.style.display = "none";
-    const oc = overlayRef.current?.parentElement?.querySelector(".chart-crosshair");
-    if (oc) oc.getContext("2d").clearRect(0, 0, oc.width, oc.height);
+    if (crosshair) {
+      const octx = crosshair.getContext("2d");
+      octx.clearRect(0, 0, crosshair.width, crosshair.height);
+    }
   }
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      <canvas ref={canvasRef} className="chart-canvas" />
       <canvas
-        className="chart-canvas chart-crosshair"
-        style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
+        ref={canvasRef}
+        className="chart-canvas"
+        style={{ position: "absolute", inset: 0 }}
       />
-      {/* invisible hit area on top */}
+      <canvas
+        ref={crosshairRef}
+        className="chart-crosshair"
+        style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+      />
       <div
         style={{ position: "absolute", inset: 0 }}
         onMouseMove={handleMouseMove}
@@ -209,37 +236,21 @@ export default function DynamicsChart({ data, dt = 1/24/60 }) {
       />
       <div
         ref={overlayRef}
-        className="chart-tooltip"
-        style={{ display: "none" }}
+        style={{
+          display: "none",
+          position: "absolute",
+          pointerEvents: "none",
+          background: "rgba(255,255,255,0.92)",
+          border: "1px solid rgba(0,0,0,0.1)",
+          borderRadius: "6px",
+          padding: "6px 10px",
+          fontSize: "11px",
+          fontFamily: "'Source Code Pro', monospace",
+          color: "rgba(0,0,0,0.75)",
+          whiteSpace: "nowrap",
+          zIndex: 10,
+        }}
       />
-      <style>{`
-        .chart-tooltip {
-          position: absolute;
-          background: #fff;
-          border: 1px solid var(--border);
-          border-radius: 3px;
-          padding: 8px 10px;
-          pointer-events: none;
-          font-family: 'Source Code Pro', monospace;
-          font-size: 11px;
-          color: var(--text);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-          min-width: 120px;
-          z-index: 10;
-        }
-        .hover-row {
-          display: flex;
-          justify-content: space-between;
-          gap: 16px;
-          color: var(--text-muted);
-          line-height: 1.8;
-        }
-        .hover-row span:last-child { color: var(--text); }
-        .hover-row.accent span:last-child {
-          color: var(--accent);
-          font-weight: 500;
-        }
-      `}</style>
     </div>
   );
 }

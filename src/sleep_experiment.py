@@ -223,6 +223,6 @@ def perform_t_test():
 
 
 if __name__ == "__main__":
-    # main()
-    # plot_results()
+    main()
+    plot_results()
     perform_t_test()

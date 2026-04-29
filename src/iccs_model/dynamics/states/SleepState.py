@@ -35,9 +35,9 @@ class SleepState(State):
     
     def modify_parameters(self, params):
         # Reset from last state
-        params.set_default_suicidal_thought_params()
-        params.set_default_escape_behavior_params()
-        params.set_stress_params(impulse_rate=0)
+        params.set_default_suicidal_thought_coefficients()
+        params.set_default_escape_behavior_coefficients()
+        params.set_stress_coefficients(impulse_rate=0)
     
     def to_string(self):
         return self.STATE_NAME
