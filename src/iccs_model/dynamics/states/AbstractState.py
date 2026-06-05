@@ -58,7 +58,7 @@ class State(ABC):
         self._time_left -= dt
 
     @abstractmethod
-    def generate_time(self, time, prev_state, state_params):
+    def generate_time(self, time, prev_state, state_params, is_weekend=False):
         """
         Generates the time length of the state.
 
@@ -103,7 +103,7 @@ class State(ABC):
         pass
 
     @abstractmethod
-    def following_state(self):
+    def following_state(self, is_weekend=False):
         """
         Returns the class of the following state.
         """

@@ -7,3 +7,8 @@ class NextStateError(TypeError):
     def __init__(self, curr_state):
         message = f"Tried finding next state after {curr_state.to_string()}, but previous state was of wrong type."
         super().__init__(message)
+
+class StateError(TypeError):
+    def __init__(self, state):
+        message = f"Passed state with key {state} was not found."
+        super().__init__(message)

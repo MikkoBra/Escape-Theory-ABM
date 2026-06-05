@@ -5,7 +5,7 @@ from itertools import islice
 from scipy.stats import ttest_ind, mannwhitneyu
 import matplotlib.pyplot as plt
 
-from iccs_model.sleep_deprivation.models.SleepModel import SleepModel
+from iccs_model.models.SleepModel import SleepModel
 
 N_RUNS = 1000
 DT = 0.1
@@ -223,6 +223,7 @@ def perform_t_test():
 
 
 if __name__ == "__main__":
-    main()
-    plot_results()
-    perform_t_test()
+    # main()
+    # plot_results()
+    # perform_t_test()
+    print(run_single(1))

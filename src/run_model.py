@@ -1,5 +1,5 @@
-from iccs_model.sleep_deprivation.models.DefaultModel import DefaultModel
-from iccs_model.sleep_deprivation.models.SleepModel import SleepModel
+from iccs_model.models.DefaultModel import DefaultModel
+from iccs_model.models.SleepModel import SleepModel
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch

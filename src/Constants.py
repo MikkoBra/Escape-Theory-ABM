@@ -24,13 +24,6 @@ WAKE_TIME = 7/24
 WORK_TIME = 9/24
 HEALTHY_SLEEP = 8/24
 
-# State-related constants
-SLEEP_MEAN_INDEX = 0
-SLEEP_SD_INDEX = 1
-COMMUTE_MEAN_INDEX = 2
-COMMUTE_SD_INDEX = 3
-CONSISTENT_SLEEP_INDEX = 4
-
 # Stress-related constants
 L_S_INDEX = 0
 lambda_S_INDEX = 1

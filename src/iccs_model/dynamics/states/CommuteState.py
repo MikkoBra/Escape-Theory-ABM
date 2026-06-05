@@ -13,7 +13,7 @@ class CommuteState(State):
     def __init__(self):
         super().__init__()
     
-    def generate_time(self, time, prev_state, state_params):
+    def generate_time(self, time, prev_state, state_params, is_weekend=False):
         # Check if last state was the correct one
         if prev_state is not None \
           and prev_state.to_string() not in self.preceding_states():
@@ -47,7 +47,7 @@ class CommuteState(State):
     def preceding_states(self):
         return np.array(["morning", "work"])
     
-    def following_state(self):
+    def following_state(self, is_weekend=False):
         if self._prev_state.to_string() == "morning":
             return "work"
         elif self._prev_state.to_string() == "work":

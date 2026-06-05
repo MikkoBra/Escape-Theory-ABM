@@ -11,7 +11,7 @@ class SleepState(State):
     """
     STATE_NAME = "sleep"
     
-    def generate_time(self, time, prev_state, state_params):
+    def generate_time(self, time, prev_state, state_params, is_weekend=False):
         # Check if last state was the correct one
         if prev_state is not None \
           and prev_state.to_string() not in self.preceding_states():
@@ -45,5 +45,5 @@ class SleepState(State):
     def preceding_states(self):
         return np.array(["home"])
     
-    def following_state(self):
+    def following_state(self, is_weekend=False):
         return "morning"

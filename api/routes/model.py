@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from iccs_model.networked_agents.models.NetworkedModel import NetworkedModelNumba
+from network_model.networked_agents.models.NetworkedModel import NetworkedModelNumba
 from Constants import MINUTE_LENGTH
 
 model_bp = Blueprint("model", __name__)

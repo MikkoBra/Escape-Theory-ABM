@@ -16,48 +16,36 @@ you may use the scripts contained in src. The model itself is contained in src/i
 src/
 ├── errors/                                         # Custom error classes
 |
-├── model/                                          # Module containing all model logic
-│   ├── dynamics/                                   # Defines the core dynamics of the models
-|   |   ├── parameters/                             # Contains everything related to parameter
-|   |   |   |                                         settings
-|   |   |   ├── sets/                               # Contains classes representing specific
-|   |   |   |                                         parameters and their coefficient settings
-|   |   |   ├── AbstractParameters.py               # Abstract class contining all parameters'
-|   |   |   |                                         Set classes
-|   |   |   ├── DefaultParameters.py                # Implementation of AbstractParameters
-|   |   |   |                                         defining default parameter values
-|   |   |   ├── DefaultParameterFactory.py          # Class that enables modification of
-|   |   |   |                                         specified default coefficient values
-|   |   |   └── StateParameters.py                  # Class containing state-related variables
-|   |   |                                             that need to be stored between states
-|   |   ├── states/                                 # Contains classes defining agent states
-|   |   ├── AgentUpdater.py                         # Contains all parameter update rules
-|   |   ├── state_registry.py                       # Initializes state objects before simulation
-|   |   └── StateManager.py                         # Handles switching between agent states
+├── iccs_model/                                     # Module containing all model logic for the ICCS 2026 model
 |   |
-|   ├── sleep_deprivation/                          # Contains agents and models specific to
-|   |   |                                             analysis of the effects of sleep
-|   |   |                                             deprivation on suicidality
-|   │   ├── agents/
-|   |   |   ├── AgentFactory.py                     # Interface for generating agents
-|   |   |   ├── StandardAgent.py                    # Agent with all model extensions
-|   |   |   ├── BaselineAgent.py                    # Agent with dynamics from Wang et al.
-|   |   |   ├── SleepAgent.py                       # Agent with consistent 8h sleep
-|   |   |   └── BadSleepAgent.py                    # Agent with consistent 6h sleep     
-|   │   └── models/
-|   |       ├── DefaultModel.py                     # Model with 15 StandardAgents and 1 Baseline
-|   |       └── SleepModel.py                       # Model with 1 SleepAgent and 1 BadSleepAgent
+|   ├── agents/                                     # Contains agents specifically defined for
+|   |                                                 analysis in the ICCS 2026 paper.
+|   ├── models/
+|   |   ├── DefaultModel.py                         # Model with 15 StandardAgents and 1 Baseline
+|   |   └── SleepModel.py                           # Model with 1 SleepAgent and 1 BadSleepAgent
 |   |
-│   └── social_contagion/                           # Contains agents and models specific to
-|       |                                             analysis of the effects of social media
-|       |                                             on social contagion of suicidality
-|       ├── agents/                  
-|       └── models/
+│   └── dynamics/                                   # Contains logic for state switching and agent updating
 |
-├── output/                        # Files containing simulation output
+├── networked_model/                                # Module containing all model logic for the final thesis model
+|   |
+|   ├── agents/                                     # Contains parameter settings for each agent type.
+|   |                                               # MODIFY/ADD HERE TO FINETUNE COEFFICIENTS AND RUN DIFFERENT SCENARIOS
+|   |
+|   ├── models/                                     # Contains models for different scenarios
+|   |   |                                           # MODIFY/ADD HERE TO CHANGE DATA COLLECTION AND COMPONENTS USED
+|   |   |
+|   |   ├── BaselineModel.py                        # Model with only disconnected baseline Wang et al. agents (no daily schedule)
+|   |   └── NetworkedModel.py                       # Model with network effects and daily schedules, can also run baseline agents
+|   |
+│   └── dynamics/                                   # Contains logic for state switching and agent updating
+|                                                   # MODIFY/ADD HERE TO CHANGE AGENT DYNAMICS AND SCHEDULES
+|
+├── output/                        # Files containing simulation output (make dir manually if you encounter related error)
 ├── Constants.py                   # Constants used in the model
-├── run_model.py                   # Runs the default sleep deprivation model based on input
-├── sleep_experiment.py            # Runs the SleepModel and generates results for analysis
+├── run_baseline_model.py          # Runs the improved model with only baseline (Wang et al.) agents without schedule
+├── run_model.py                   # Runs the default ICCS sleep deprivation model based on input
+├── run_network_model.py           # Contains code for running and analyzing the improved model with network effects
+├── sleep_experiment.py            # Runs the ICCS SleepModel, used for the submitted paper
 └── requirements.txt               # Python library requirements for this model
 .gitignore
 README.md
@@ -82,12 +70,21 @@ Install dependencies
   pip install -r requirements.txt
 ```
 
-Run the model
+To run the model as it was developed for ICCS 2026:
 
 ```bash
   cd src
   python run_model.py
 ```
+
+To run an optimized version of the baseline Wang et al. model:
+
+```bash
+  cd src
+  python run_baseline_model.py
+```
+
+```run_network_model.py``` contains many functions that are useful for running and testing the full extended model, but is still in development. Run it and copy from it at your own discretion.
 
 ## Authors
 

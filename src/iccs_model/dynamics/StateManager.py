@@ -28,10 +28,10 @@ class StateManager():
     def update_state(self, dt, time, agent_params):
         self._state.pass_time(dt)
         if self._state.time_left <= 0:
-            next_state_name = self._state.following_state()
+            next_state_name = self._state.following_state(is_weekend=False)
             next_state_class = get_state(next_state_name)
             next_state = next_state_class()
-            next_state.generate_time(time, self._state, self._state_params)
+            next_state.generate_time(time, self._state, self._state_params, False)
             next_state.modify_parameters(agent_params)
             next_state.last_state = self._state
             self._state = next_state
