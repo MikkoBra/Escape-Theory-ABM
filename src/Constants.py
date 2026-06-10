@@ -1,6 +1,7 @@
 
 class Constants:
     DAY_LENGTH = 1
+    MINUTE_LENGTH = DAY_LENGTH/24/60
     WORKDAY_LENGTH = 8/24
     WAKE_TIME = 7/24
     WORK_TIME = 9/24

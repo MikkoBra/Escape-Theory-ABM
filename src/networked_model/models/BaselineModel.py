@@ -80,7 +80,7 @@ class BaselineModel(mesa.Model):
         
         
         # Initialize updater
-        self.updater = AgentUpdater()
+        self.updater = AgentUpdater(seed=seed)
         
         # Tracked variables
         self.tracked_vars = [

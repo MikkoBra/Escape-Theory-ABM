@@ -102,6 +102,7 @@ class BaselineAgent(DefaultAgent):
 
 
     def initialize_characteristics(
+            self,
             variable_sleep=False,
             variable_commute=False
             ):

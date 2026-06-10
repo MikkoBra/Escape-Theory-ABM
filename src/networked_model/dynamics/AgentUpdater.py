@@ -352,11 +352,11 @@ class AgentUpdater:
     Numba-optimized agent updater that processes all agents simultaneously.
     """
     
-    def __init__(self):
-        pass
+    def __init__(self, seed=None):
+        np.random.seed(seed)
     
     def update_all_agents(self, agent_states, constants, dt, neighbor_data, 
-                         neighbor_counts, neighbor_offsets):
+                         neighbor_counts, neighbor_offsets, read_stress=False):
         """
         Update all agents in a single vectorized call.
         
@@ -374,7 +374,7 @@ class AgentUpdater:
             )
  
         # ── stress ────────────────────────────────────────────────────────────
-        if 'stress' in agent_states:
+        if not read_stress and 'stress' in agent_states:
             agent_states['stress'] = update_stress(
                 agent_states['stress'], dt,
                 agent_states['external_strat'],
