@@ -219,7 +219,8 @@ class Network(metaclass=ABCMeta):
         ax.set_yscale('log')
         ax.set_xlabel("Degree (k)", fontsize=fontsize)
         ax.set_ylabel("P(X = k)", fontsize=fontsize)
-        ax.set_title(title, fontsize=fontsize, fontweight="bold")
+        if title != "":
+            ax.set_title(title, fontsize=fontsize, fontweight="bold")
         ax.set_xlim(right=xmax)
         ax.tick_params(axis="both", labelsize=fontsize)
         ax.legend(fontsize=fontsize - 2, frameon=True)
@@ -511,3 +512,4 @@ class Network(metaclass=ABCMeta):
         img = Image.open(io.BytesIO(img_bytes))
         
         return img
+    

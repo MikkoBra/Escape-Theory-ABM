@@ -1,57 +1,39 @@
 from networked_model.models.AbstractModel import Model
 import numpy as np
 from networked_model.dynamics.AgentUpdater import AgentUpdater
-from networked_model.networks.NetworkFactory import NetworkFactory
 from networked_model.dynamics.ScheduleManager import ScheduleManager
 from Constants import Constants
-from networked_model.networks.util import compute_connectedness_vectorized
-from networked_model.agents.NewsStation import NewsStation
-from networked_model.dynamics.NewsSignalManager import NewsSignalManager
 
 
-class NetworkedModel(Model):
+class ScheduledModel(Model):
     """
     Model with settings suited for analysis of the
-    differences between agents with network effects.
+    differences between agents with different schedules
+    without network effects
     """
-    def __init__(self, num_agents=4000, sim_length=10, dt=Constants.MINUTE_LENGTH, seed=None, verbose=False, warmup=0,
+    def __init__(self, num_agents=4000, sim_length=50, dt=Constants.MINUTE_LENGTH, seed=None, verbose=False, warmup=10,
                  parameters={
+                     "agent_types": {
+                         "baseline": 1000,
+                         "default": 1000,
+                         "bad_sleep": 1000,
+                         "good_sleep": 1000,
+                     },
                      "read_stress": False,
                      "randomize": True,
                      "only_sleep": True,
-                     "network": "hk",
-                     "m": 16,
-                    'cluster_prob': 0.6,
-                    "initial_attractiveness": 5,
-                    "node_removal_rate": 0.1,
-                    "edge_removal_prob": 0.5,
-                    "hub_count": 2,
-                    "hub_degree": 400,
-                    "weighted_network": False,
                  }):
         super().__init__(num_agents=num_agents, sim_length=sim_length, dt=dt, seed=seed, verbose=verbose, warmup=warmup)
         if "randomize" not in parameters:
             randomize = True
         else: randomize = parameters["randomize"]
-        
-        # Generate network
-        self.weighted_network = parameters.get("weighted_network", False)
-        NetworkFactory().create_network(model=self, parameters=parameters)
-        # Ensure that number of agents corresponds with number of network nodes
-        if self.num_agents != len(self.network.nodes):
-            print(f"Passed num_agents: {num_agents}, number of nodes in network: {len(self.network.nodes)}, setting num_agents to number of nodes.")
-            self.num_agents = len(self.network.nodes)
 
         self.set_agent_type_labels(parameters, randomize=randomize)
         self.set_coeffs_and_characteristics(parameters)
-        self._build_neighbor_structures()
 
-        self.constants['connectedness'] = compute_connectedness_vectorized(
-            self.neighbor_data,
-            self.neighbor_counts,
-            self.neighbor_offsets
-        )
-        self.constants['clustering_coefficient'] = self.network.compute_clustering_coefficients()
+        self.constants['connectedness'] = np.zeros(num_agents, dtype=np.float32)
+        self.constants['clustering_coefficient'] = np.zeros(num_agents, dtype=np.float32)
+        self.constants['opinion_scalar'] = np.zeros(num_agents, dtype=np.float32)
         self.constants['commute'] = self.compute_commute_durations()
 
         # Set up state representation dictionary (index = agent id)
@@ -73,7 +55,6 @@ class NetworkedModel(Model):
             'internal_strat': np.zeros(self.num_agents, dtype=np.float32),
             "suicide_history": np.zeros(self.num_agents, dtype=np.float32),
             "morning_impulse": np.zeros(self.num_agents, dtype=np.float32),
-            "burdensomeness": np.zeros(self.num_agents, dtype=np.float32),
             'prev_sleep': np.zeros(self.num_agents, dtype=np.float32),
             'total_time': np.zeros(self.num_agents, dtype=np.float32),
         }
@@ -86,7 +67,8 @@ class NetworkedModel(Model):
             'time_left': np.zeros(self.num_agents, dtype=np.float32)
         }
 
-        self.schedule_manager = ScheduleManager(constants=self.constants)
+        only_sleep = parameters.get('only_sleep', False)
+        self.schedule_manager = ScheduleManager(constants=self.constants, only_sleep=only_sleep)
         self.schedule = self.schedule_manager.init_schedule(self.num_agents, Constants.WAKE_TIME)
 
         # Tracked variables
@@ -98,7 +80,6 @@ class NetworkedModel(Model):
             "escape_behavior",
             "external_strat",
             "internal_strat",
-            "burdensomeness",
             "suicide_history",
             "total_time",
             "labels",
@@ -112,40 +93,8 @@ class NetworkedModel(Model):
                 self.data["labels"] = self.constants['labels']
             else:
                 self.data[var] = np.zeros((self.num_steps, self.num_agents), dtype=np.float32)
+        
 
-    
-    def _build_neighbor_structures(self):
-        """
-        Build flattened neighbor data structures for efficient Numba processing.
-        """
-        net = self.network
-        
-        # Count neighbors for each node
-        self.neighbor_counts = np.zeros(self.num_agents, dtype=np.int32)
-        for i, node in enumerate(self.network.nodes):
-            self.neighbor_counts[i] = len(net.adjacency[node])
-        
-        # Calculate offsets
-        self.neighbor_offsets = np.zeros(self.num_agents, dtype=np.int32)
-        cumsum = 0
-        for i in range(self.num_agents):
-            self.neighbor_offsets[i] = cumsum
-            cumsum += self.neighbor_counts[i]
-        
-        # Flatten neighbor data: [neighbor_id, weight] pairs
-        total_neighbors = cumsum
-        self.neighbor_data = np.zeros((total_neighbors, 2), dtype=np.float32)
-        
-        for i, node in enumerate(self.network.nodes):
-            neighbors = net.adjacency[node]
-            offset = self.neighbor_offsets[i]
-            
-            for j, (neighbor, weight) in enumerate(neighbors.items()):
-                # Find the index of this neighbor in the nodes array
-                neighbor_idx = np.where(self.network.nodes == neighbor)[0][0]
-                self.neighbor_data[offset + j, 0] = neighbor_idx
-                self.neighbor_data[offset + j, 1] = weight
-    
     def collect_data(self):
         """
         Copy current agent states directly into preallocated arrays.
@@ -186,9 +135,9 @@ class NetworkedModel(Model):
             self.states,
             self.constants,
             self.dt,
-            neighbor_data=self.neighbor_data,
-            neighbor_counts=self.neighbor_counts,
-            neighbor_offsets=self.neighbor_offsets,
+            neighbor_data=None,
+            neighbor_counts=None,
+            neighbor_offsets=None,
             read_stress=self.read_stress,
         )
         

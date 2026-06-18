@@ -76,6 +76,7 @@ class BaselineModel(mesa.Model):
             'external_strat': np.zeros(self.num_agents, dtype=np.float32),
             'internal_strat': np.zeros(self.num_agents, dtype=np.float32),
             'total_time': np.zeros(self.num_agents, dtype=np.float32),
+            'morning_impulse': np.zeros(self.num_agents, dtype=np.float32),
         }
         
         

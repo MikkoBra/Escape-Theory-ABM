@@ -854,9 +854,9 @@ if __name__ == "__main__":
 
     # plot_single_agent_dynamics()
 
-    # plot_all_dists()
+    plot_all_dists()
 
-    # parameter_sweeps()
+    parameter_sweeps()
 
 
     # summarize_network(net_type='facebook') # n=4039
@@ -868,7 +868,7 @@ if __name__ == "__main__":
     # summarize_network(net_type='empirical', sub_type='athlete', num_agents=25000)
 
     # NEW: Run news station simulation example
-    # run_news_simulation_example()
+    run_news_simulation_example()
     
     print("\n" + "=" * 60)
     print("All examples complete!")

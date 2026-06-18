@@ -7,16 +7,20 @@ from Constants import Constants
 SOCIAL_WEIGHT_IDX = 1
 
 
-class DefaultAgent():
+class BrightenAgent():
 
     def initialize_coefficients(self):
         """
-        Returns parameter settings for a default agent.
+        Agent informed by the Brighten study's data.
+        Mean sleep and sleep variance is modified wrt
+        a default agent, and social events are less likely
+        for all agents.
         """
-        # Extract default parameter values
         return {
             'news_signal': {
                 'decay': 0.2,
+                'levy_alpha': 2,
+                'share_rate': 0.1,
             },
 
             'stress': {
@@ -55,13 +59,13 @@ class DefaultAgent():
 
             'suicidal_thought': {
                 'feedback': 3,
-                'sig_middle': 0.35,
+                'sig_middle': 0.37,
                 'sig_steepness': 100,
             },
 
             'escape_behavior': {
                 'feedback': 3,
-                'sig_middle': 0.3,
+                'sig_middle': 0.32,
                 'sig_steepness': 50,
             },
 
@@ -98,13 +102,14 @@ class DefaultAgent():
         """
         characteristics = {
             # No weekends in schedule
-            'weekends': False,
+            'weekends': True,
             # News effect is applied
             'consumes_news': True,
             # Young adult
             'age': 25,
             # Somewhat impulsive
-            'impulsivity': 0.2,
+            'impulsivity': 0.7,
+            'event_lambda': 1,
         }
 
         if variable_commute:
@@ -114,8 +119,8 @@ class DefaultAgent():
             characteristics['commute'] = 0.5 * (1/24) * Constants.DAY_LENGTH
         
         if variable_sleep:
-            characteristics['mean_sleep'] = 8
-            characteristics['sigma_sleep'] = 1
+            characteristics['mean_sleep'] = 5.14
+            characteristics['sigma_sleep'] = 2.90
         else:
             characteristics['sleep'] = 8
         

@@ -35,6 +35,8 @@ class HolmeKimNetwork(Network):
         removal_rate = getattr(self.model, 'node_removal_rate', 0.0)
         initial_attr = getattr(self.model, 'initial_attractiveness', 1)
         edge_removal_prob = getattr(self.model, 'edge_removal_prob', 0.0)
+        hub_count = getattr(self.model, 'hub_count', 0)
+        hub_degree = getattr(self.model, 'hub_degree', 0)
 
         if m < 1 or m >= n:
             raise ValueError("Network requires 1 <= m < n")
@@ -55,6 +57,14 @@ class HolmeKimNetwork(Network):
         # Step 4: Random edge removal (creates more degree heterogeneity)
         if edge_removal_prob > 0:
             G = self._apply_edge_removal(G, edge_removal_prob, min_degree=1)
+        
+        # Step 5: create hubs
+        if hub_count > 0 and hub_degree > 0:
+            G = self._create_hubs(G, hub_count, hub_degree)
+        
+        # Step 6: assign Dunbar weights
+        if getattr(self.model, "weighted_network", False):
+            G = self._apply_weight_distribution(G)
 
         # Store edges as numpy array
         self.edges = np.array(G.edges(), dtype=np.int32)
@@ -69,8 +79,9 @@ class HolmeKimNetwork(Network):
 
         for u, v in self.edges:
             u, v = int(u), int(v)
-            self.adjacency[u][v] = self.default_weight
-            self.adjacency[v][u] = self.default_weight
+            w = G[u][v].get("weight", self.default_weight)
+            self.adjacency[u][v] = float(w)
+            self.adjacency[v][u] = float(w)
 
     def _add_initial_attractiveness(self, G, n, m, A):
         """
@@ -153,6 +164,83 @@ class HolmeKimNetwork(Network):
                 if G.degree(u) > min_degree and G.degree(v) > min_degree:
                     G.remove_edge(u, v)
         
+        return G
+    
+    def _create_hubs(self, G, hub_count, target_degree):
+        """
+        Select hub_count random nodes and increase their degree
+        until they reach target_degree by adding random edges.
+
+        Existing edges are preserved.
+        """
+        if hub_count <= 0:
+            return G
+
+        nodes = list(G.nodes())
+
+        if hub_count > len(nodes):
+            hub_count = len(nodes)
+
+        hubs = random.sample(nodes, hub_count)
+
+        for i, hub in enumerate(hubs):
+            print(f"Creating hub {i+1} out of {len(hubs)}")
+            # Maximum possible degree
+            max_degree = len(nodes) - 1
+            desired_degree = min(target_degree, max_degree)
+
+            while G.degree(hub) < desired_degree:
+
+                # Nodes not already connected to hub
+                candidates = [
+                    n for n in nodes
+                    if n != hub and not G.has_edge(hub, n)
+                ]
+
+                if not candidates:
+                    break
+
+                # Preferential attachment
+                degrees = np.array([G.degree(n) + 1 for n in candidates], dtype=float)
+                probs = degrees / degrees.sum()
+                target = np.random.choice(candidates, p=probs)
+                G.add_edge(hub, target)
+        return G
+    
+    def _apply_weight_distribution(self, G):
+        """
+        Assigns weighted edges according to a 3-component mixture:
+        
+        - 15/150 edges: U(0.99, 1.0)
+        - 35/150 edges: U(0.4, 0.6)
+        - 100/150 edges: U(0.05, 0.1)
+        
+        Applied globally across edges.
+        """
+        if not getattr(self.model, "weighted_network", False):
+            return G
+
+        edges = list(G.edges())
+        rng = np.random.default_rng()
+        rng.shuffle(edges)
+
+        n = len(edges)
+
+        n_high = int(n * 15 / 150)
+        n_mid  = int(n * 35 / 150)
+        n_low  = n - n_high - n_mid
+
+        for i, (u, v) in enumerate(edges):
+            if i < n_high:
+                w = np.random.uniform(0.99, 1.0)
+            elif i < n_high + n_mid:
+                w = np.random.uniform(0.4, 0.6)
+            else:
+                w = np.random.uniform(0.05, 0.1)
+
+            # IMPORTANT: write directly to graph edge attribute
+            G[u][v]["weight"] = float(w)
+
         return G
     
     def visualize(self, output_file="src/output/hk_network.html", notebook=False,

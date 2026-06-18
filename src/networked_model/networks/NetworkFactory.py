@@ -28,13 +28,12 @@ class NetworkFactory():
             return
         else:
             model.m = parameters.get("m")
-            if parameters.get("network") == "hk":
-                model.initial_attractiveness = parameters.get("initial_attractiveness")
-                model.node_removal_rate = parameters.get("node_removal_rate")
-                model.edge_removal_prob = parameters.get("edge_removal_prob")
-                model.cluster_prob = parameters.get("cluster_prob")
-                network = HolmeKimNetwork(model=model)
-            else:
-                network = BarabasiAlbertNetwork(model=model)
+            model.initial_attractiveness = parameters.get("initial_attractiveness")
+            model.node_removal_rate = parameters.get("node_removal_rate")
+            model.edge_removal_prob = parameters.get("edge_removal_prob")
+            model.cluster_prob = parameters.get("cluster_prob")
+            model.hub_count = parameters.get("hub_count")
+            model.hub_degree = parameters.get('hub_degree')
+            network = HolmeKimNetwork(model=model)
             network.generate_network()
             model.network = network

@@ -72,6 +72,3 @@ class NewsStation:
         decay_decrease = 0 * effect_multiplier  # Decrease by up to 0.5, modulated by factors
         new_decay = max(0.1, current_decay - decay_decrease)  # Don't go below 0.1
         # agent.parameters.set_stress_coefficients(decay=new_decay)
-    
-    def __repr__(self):
-        return f"NewsStation(id={self.station_id}, opinion={self.opinion_scalar:.2f}, agents={len(self.agents)})"

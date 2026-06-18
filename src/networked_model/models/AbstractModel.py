@@ -92,9 +92,18 @@ class Model(mesa.Model):
             if "default" not in parameters["agent_types"]:
                 parameters["agent_types"]["default"] = 0
             parameters["agent_types"]["default"] += self.num_agents - sum(parameters["agent_types"].values())
+        
+        elif sum(parameters["agent_types"].values()) > self.num_agents:
+            if len(parameters["agent_types"].keys()) > 1:
+                raise Exception(f"Too many agent types and too many of each agent type. Make sure the total does not exceed {self.num_agents}.")
+            if self.verbose:
+                print(f'Passed number of agents in agent_types: {sum(parameters["agent_types"].values())}, num_agents: {self.num_agents}, removing agents.')
+            for key in parameters["agent_types"].keys():
+                parameters["agent_types"][key] = self.num_agents
+
     
 
-    def set_agent_type_labels(self, parameters={}):
+    def set_agent_type_labels(self, parameters={}, randomize=True):
         """
         Distributes defined agent types over available agent ids, and
         fills the rest with default agents.
@@ -114,7 +123,7 @@ class Model(mesa.Model):
                   for agent_type, amount in parameters["agent_types"].items()
                   for _ in range(amount)]
         # Randomly assign agent types to agent ids
-        if len(parameters["agent_types"].keys()) > 1:
+        if len(parameters["agent_types"].keys()) > 1 and randomize:
             random.shuffle(labels)
         self.constants["labels"] = labels
     

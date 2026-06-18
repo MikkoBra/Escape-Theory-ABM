@@ -9,7 +9,7 @@ from networked_model.agents.NewsStation import NewsStation
 from networked_model.dynamics.NewsSignalManager import NewsSignalManager
 
 
-class NetworkedModel(Model):
+class EventModel(Model):
     """
     Model with settings suited for analysis of the
     differences between agents with network effects.
@@ -27,7 +27,8 @@ class NetworkedModel(Model):
                     "edge_removal_prob": 0.5,
                     "hub_count": 2,
                     "hub_degree": 400,
-                    "weighted_network": False,
+                    "weighted_network": True,
+                    "social_events": True,
                  }):
         super().__init__(num_agents=num_agents, sim_length=sim_length, dt=dt, seed=seed, verbose=verbose, warmup=warmup)
         if "randomize" not in parameters:
@@ -54,6 +55,11 @@ class NetworkedModel(Model):
         self.constants['clustering_coefficient'] = self.network.compute_clustering_coefficients()
         self.constants['commute'] = self.compute_commute_durations()
 
+        self.social_events = parameters.get("social_events", False)
+        if self.social_events:
+            # Default: all agents participate
+            self.constants['social_events_mask'] = np.ones(self.num_agents, dtype=bool)
+
         # Set up state representation dictionary (index = agent id)
         if "read_stress" in parameters and parameters["read_stress"]:
             self.read_stress = True
@@ -76,6 +82,8 @@ class NetworkedModel(Model):
             "burdensomeness": np.zeros(self.num_agents, dtype=np.float32),
             'prev_sleep': np.zeros(self.num_agents, dtype=np.float32),
             'total_time': np.zeros(self.num_agents, dtype=np.float32),
+            'social_event_today': np.zeros(self.num_agents, dtype=np.float32),
+            'home_time_remaining': np.zeros(self.num_agents, dtype=np.float32),
         }
 
         self.updater = AgentUpdater(seed=seed)
@@ -86,7 +94,7 @@ class NetworkedModel(Model):
             'time_left': np.zeros(self.num_agents, dtype=np.float32)
         }
 
-        self.schedule_manager = ScheduleManager(constants=self.constants)
+        self.schedule_manager = ScheduleManager(constants=self.constants, social_events=self.social_events)
         self.schedule = self.schedule_manager.init_schedule(self.num_agents, Constants.WAKE_TIME)
 
         # Tracked variables

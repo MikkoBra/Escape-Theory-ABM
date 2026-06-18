@@ -1,66 +1,62 @@
 import numpy as np
 from numba import njit, prange
 
+@njit(fastmath=True, cache=True)
+def propagate_news_signal(
+    news_signal,
+    prev_news_signal,
+    neighbor_data,
+    neighbor_counts,
+    neighbor_offsets,
+    opinion_scalars,
+    dt,
+    base_rate,
+    sigma_opinion
+):
+    n = len(news_signal)
+
+    new_signal = np.copy(news_signal)
+
+    for i in range(n):
+        if prev_news_signal[i] <= 0.0:
+            continue
+
+        n_neighbors = neighbor_counts[i]
+        offset = neighbor_offsets[i]
+
+        for j in range(n_neighbors):
+            idx = offset + j
+
+            neighbor = int(neighbor_data[idx, 0])
+            weight = neighbor_data[idx, 1]
+
+            # opinion similarity
+            diff = opinion_scalars[i] - opinion_scalars[neighbor]
+            sim = np.exp(-(diff * diff) / (2 * sigma_opinion * sigma_opinion))
+
+            # Approximation of poisson process
+            rate = base_rate * prev_news_signal[i] * weight * sim
+
+            p = 1.0 - np.exp(-rate * dt)
+
+            if np.random.random() < p:
+                # transmission (choose model)
+                new_signal[neighbor] = max(new_signal[neighbor], prev_news_signal[i] * weight)
+
+    return new_signal
 
 @njit(fastmath=True, cache=True)
-def update_news_signal_levy(
+def update_news_signal(
     prev_state,
     dt,
     decay,
-    levy_alpha,
-    share_rate,
-    neighbor_data,
-    neighbor_counts,
-    neighbor_offsets
 ):
-    """
-    Lévy flight-based news signal propagation.
-    Neighbors occasionally share the signal with their neighbors according to 
-    the strength of their current signal.
-    """
     n = len(prev_state)
     new_signal = np.empty(n, dtype=np.float32)
     for i in prange(n):
         # Decay term
         if prev_state[i] != 0:
             val = prev_state[i] + dt * (-decay[i] * prev_state[i])
-
-            # Lévy flight sharing
-            n_neighbors = neighbor_counts[i]
-            
-            if n_neighbors > 0 and prev_state[i] > 0.01:  # Only if agent has signal
-                # Probability of sharing proportional to signal strength
-                share_prob = share_rate[i] * prev_state[i] * dt
-                
-                if np.random.random() < share_prob:
-                    offset = neighbor_offsets[i]
-                    
-                    # Generate Lévy flight: number of neighbors to share with
-                    # Using inverse transform sampling for power-law
-                    u = np.random.random()
-                    num_targets = int(1.0 / (u ** (1.0 / levy_alpha[i])))
-                    num_targets = max(1, min(num_targets, n_neighbors, 10))  # Cap at 10
-                    
-                    # Randomly select target neighbors
-                    # Create shuffled indices for selection
-                    indices = np.arange(n_neighbors)
-                    # Fisher-Yates shuffle (Numba compatible)
-                    for j in range(n_neighbors - 1, 0, -1):
-                        k = np.random.randint(0, j + 1)
-                        indices[j], indices[k] = indices[k], indices[j]
-                    
-                    spillover = 0.0
-                    for j in range(num_targets):
-                        idx = offset + indices[j]
-                        neighbor_id = int(neighbor_data[idx, 0])
-                        weight = neighbor_data[idx, 1]
-                        
-                        # Receive signal from neighbor proportional to their signal
-                        spillover += weight * prev_state[neighbor_id]
-                    
-                    # Average and apply
-                    spillover /= num_targets
-                    val += spillover * 0.5  # Dampening factor
 
             new_signal[i] = max(0.0, min(1.0, val))
 
@@ -123,6 +119,7 @@ def update_stress(
         
         if morning_impulse[i] > 0:
             I_t = morning_impulse[i]
+            morning_impulse[i] = 0
         else:
             # Poisson event
             poisson_val = np.random.poisson(impulse_rate[i] * dt)
@@ -364,13 +361,22 @@ class AgentUpdater:
         params: dict with parameter arrays
         """
         coefficients = constants['coeff_arrays']
+        opinion_scalars = constants['opinion_scalar']
         if 'news_signal' in agent_states:
-            agent_states['news_signal'] = update_news_signal_levy(
+            agent_states['news_signal'] = propagate_news_signal(
+                agent_states['news_signal'],
+                prev_news_signal=agent_states['news_signal'].copy(),
+                neighbor_data=neighbor_data,
+                neighbor_counts=neighbor_counts,
+                neighbor_offsets=neighbor_offsets,
+                opinion_scalars=opinion_scalars,
+                dt=dt,
+                base_rate=0.5,
+                sigma_opinion=0.2
+            )
+            agent_states['news_signal'] = update_news_signal(
                 agent_states['news_signal'], dt,
                 coefficients['news_signal_decay'],
-                coefficients['news_signal_levy_alpha'],
-                coefficients['news_signal_share_rate'],
-                neighbor_data, neighbor_counts, neighbor_offsets,
             )
  
         # ── stress ────────────────────────────────────────────────────────────
@@ -382,7 +388,7 @@ class AgentUpdater:
                 coefficients['stress_decay'],
                 coefficients['stress_impulse_rate'],
                 coefficients['stress_impulse_strength'],
-                coefficients['stress_morning_impulse'],
+                agent_states['morning_impulse'],
                 coefficients['stress_alpha'],
                 coefficients['stress_beta'],
                 coefficients['stress_gamma'],
